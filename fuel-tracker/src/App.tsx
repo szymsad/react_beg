@@ -9,20 +9,27 @@ function App() {
   const [entries, setEntries] = useState<FuelEntry[]>(mockFuelData)
 
   function handleAddEntry(entry: FuelEntry) {
-  setEntries([...entries, entry])
-}
+    setEntries([...entries, entry])
+  }
+
   return (
-    <div>
+    <div className="container">
       <h1>Fuel Tracker 🚗</h1>
 
-      <FuelForm onAdd={handleAddEntry} />
+      <div className="card">
+        <FuelForm onAdd={handleAddEntry} />
+      </div>
 
-      <FuelList entries={entries} />
-      <FuelChart entries={entries} />
+      <div className="card">
+        <FuelChart entries={entries} />
+      </div>
+
+      <div className="card">
+        <FuelList entries={entries} />
+      </div>
     </div>
   )
 }
-
 
 
 export default App
