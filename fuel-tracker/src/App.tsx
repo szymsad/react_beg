@@ -3,6 +3,7 @@ import FuelList from "./components/FuelList"
 import { mockFuelData } from "./data/mockData"
 import type { FuelEntry } from "./types/FuelEntry"
 import FuelForm from "./components/FuelForm"
+import FuelChart from "./components/FuelChart"
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>(mockFuelData)
@@ -17,6 +18,7 @@ function App() {
       <FuelForm onAdd={handleAddEntry} />
 
       <FuelList entries={entries} />
+      <FuelChart entries={entries} />
     </div>
   )
 }
