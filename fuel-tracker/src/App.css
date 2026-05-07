@@ -182,3 +182,16 @@
     border-right-color: var(--border);
   }
 }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f4f4f4;
+  margin-bottom: 16px;
+}

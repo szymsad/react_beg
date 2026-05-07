@@ -1,15 +1,33 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import FuelList from "./components/FuelList"
 import FuelForm from "./components/FuelForm"
 import FuelChart from "./components/FuelChart"
 import { mockFuelData, mockCars } from "./data/mockData"
 import { useCar } from "./context/CarContext"
 import type { FuelEntry } from "./types/FuelEntry"
+import FuelStats from "./components/FuelStats"
+import { getFuelEntries, saveFuelEntries } from "./services/fuelService"
 
 function App() {
-  const [entries, setEntries] = useState<FuelEntry[]>(mockFuelData)
-  const { selectedCarId, setSelectedCarId } = useCar()
+  const [entries, setEntries] = useState<FuelEntry[]>([])
+  const [selectedCarId, setSelectedCarId] = useState<number>(() => {
+  const saved = localStorage.getItem("selectedCar")
+  return saved ? Number(saved) : 1
+})
 
+
+  
+  useEffect(() => {
+    localStorage.setItem("selectedCar", String(selectedCarId))
+  }, [selectedCarId])
+
+  useEffect(() => {
+  getFuelEntries().then(setEntries)
+  }, [])
+
+  useEffect(() => {
+  saveFuelEntries(entries)
+  }, [entries])
   // Filtrowanie po wybranym aucie — jedyne miejsce gdzie to się dzieje
   const filteredEntries = selectedCarId
     ? entries.filter(e => e.carId === selectedCarId)
@@ -43,6 +61,9 @@ function App() {
         <FuelForm onAdd={handleAddEntry} />
       </div>
 
+      <div className="card">
+        <FuelStats entries={filteredEntries} />
+      </div>
       <div className="card">
         <FuelChart entries={filteredEntries} />
       </div>

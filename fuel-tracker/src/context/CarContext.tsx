@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
 
 type CarContextType = {
@@ -7,6 +7,7 @@ type CarContextType = {
 }
 
 const CarContext = createContext<CarContextType | null>(null)
+
 
 export function CarProvider({ children }: { children: ReactNode }) {
   const [selectedCarId, setSelectedCarId] = useState<number | null>(1)
@@ -20,6 +21,7 @@ export function CarProvider({ children }: { children: ReactNode }) {
 }
 
 export function useCar() {
+  
   const ctx = useContext(CarContext)
   if (!ctx) throw new Error("useCar musi być użyty wewnątrz CarProvider")
   return ctx
