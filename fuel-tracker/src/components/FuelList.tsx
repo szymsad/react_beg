@@ -1,36 +1,30 @@
 import type { FuelEntry } from "../types/FuelEntry"
+import { calcEntryCost, calcConsumptionData } from "../utils/fuelCalculations"
 
 interface Props {
   entries: FuelEntry[]
 }
 
 function FuelList({ entries }: Props) {
+  const consumptionData = calcConsumptionData(entries)
+
   return (
     <div>
       <h2>Tankowania</h2>
       <ul>
         {entries.map((entry, index) => {
-        const cost = entry.liters * entry.pricePerLiter
+          // consumptionData ma o jeden element mniej (brak dla pierwszego wpisu)
+          const stats = consumptionData[index - 1]
 
-        let consumption = null
-
-        if (index > 0) {
-            const prev = entries[index - 1]
-            const distance = entry.mileage - prev.mileage
-
-            if (distance > 0) {
-            consumption = (entry.liters / distance) * 100
-            }
-        }
-
-        return (
+          return (
             <li key={entry.id}>
-            {entry.date} | {entry.liters}L | {entry.pricePerLiter} zł | {entry.mileage} km | 💰 {cost.toFixed(2)} zł
-            {consumption && ` | ⛽ ${consumption.toFixed(2)} L/100km`}
+              {entry.date} | {entry.liters}L | {entry.pricePerLiter} zł/L |
+              {entry.mileage} km | 💰 {calcEntryCost(entry)} zł
+              {stats && ` | ⛽ ${stats.lper100km} L/100km`}
             </li>
-        )
+          )
         })}
-        </ul>
+      </ul>
     </div>
   )
 }

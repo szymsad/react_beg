@@ -1,76 +1,67 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import type { FuelEntry } from "../types/FuelEntry"
-import type { Car } from "../types/Car"
+import { useCar } from "../context/CarContext"
 
 interface Props {
   onAdd: (entry: FuelEntry) => void
-  carId: number
 }
-function FuelForm({ onAdd, carId }: Props) {
 
-  const [date, setDate] = useState("")
+function FuelForm({ onAdd }: Props) {
+  const { selectedCarId } = useCar()
+
   const [liters, setLiters] = useState("")
-  const [mileage, setMileage] = useState("")
-
-  const [mode, setMode] = useState<"price" | "total">("price")
-
   const [pricePerLiter, setPricePerLiter] = useState("")
   const [totalCost, setTotalCost] = useState("")
+  const [mileage, setMileage] = useState("")
+  const [date, setDate] = useState("")
 
-  function normalizeFuelData(
-    liters: number,
-    pricePerLiter?: number,
-    totalCost?: number
-  ) {
-    if (pricePerLiter != null) {
-      return {
-        pricePerLiter,
-        totalCost: liters * pricePerLiter,
-      }
-    }
+  const [lastEdited, setLastEdited] = useState<"price" | "total">("price")
 
-    if (totalCost != null) {
-      return {
-        pricePerLiter: totalCost / liters,
-        totalCost,
-      }
-    }
+  const litersNum = Number(liters)
 
-    return {
-      pricePerLiter: 0,
-      totalCost: 0,
-    }
-  }
+  const calculatedTotal =
+    litersNum > 0 && Number(pricePerLiter) > 0
+      ? (litersNum * Number(pricePerLiter)).toFixed(2)
+      : ""
+
+  const calculatedPrice =
+    litersNum > 0 && Number(totalCost) > 0
+      ? (Number(totalCost) / litersNum).toFixed(2)
+      : ""
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    const litersNum = Number(liters)
-    const mileageNum = Number(mileage)
+    if (!selectedCarId) return
 
-    const normalized = normalizeFuelData(
-      litersNum,
-      mode === "price" ? Number(pricePerLiter) : undefined,
-      mode === "total" ? Number(totalCost) : undefined
-    )
+    const finalPricePerLiter =
+      lastEdited === "price"
+        ? Number(pricePerLiter)
+        : Number(calculatedPrice)
+
+    const finalTotalCost =
+      lastEdited === "total"
+        ? Number(totalCost)
+        : Number(calculatedTotal)
 
     const newEntry: FuelEntry = {
       id: Date.now(),
-      carId: carId,
+      carId: selectedCarId,
       date,
-      liters: litersNum,
-      mileage: mileageNum,
-      ...normalized,
+      liters: Number(liters),
+      pricePerLiter: finalPricePerLiter,
+      totalCost: finalTotalCost,
+      mileage: Number(mileage),
     }
 
     onAdd(newEntry)
 
-    // reset
+    // RESET
     setLiters("")
-    setMileage("")
-    setDate("")
     setPricePerLiter("")
     setTotalCost("")
+    setMileage("")
+    setDate("")
   }
 
   return (
@@ -88,48 +79,46 @@ function FuelForm({ onAdd, carId }: Props) {
       {/* LITRY */}
       <input
         type="number"
+        step="0.01"
         placeholder="Litry"
         value={liters}
         onChange={(e) => setLiters(e.target.value)}
         required
       />
 
-      {/* TRYB */}
-      <div>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "price"}
-            onChange={() => setMode("price")}
-          />
-          Cena za litr
-        </label>
+      {/* CENA ZA LITR */}
+      <input
+        type="number"
+        step="0.01"
+        placeholder="Cena za litr"
+        value={
+          lastEdited === "total"
+            ? calculatedPrice
+            : pricePerLiter
+        }
+        onChange={(e) => {
+          setLastEdited("price")
+          setPricePerLiter(e.target.value)
+        }}
+        required
+      />
 
-        <label>
-          <input
-            type="radio"
-            checked={mode === "total"}
-            onChange={() => setMode("total")}
-          />
-          Koszt całkowity
-        </label>
-      </div>
-
-      {mode === "price" ? (
-        <input
-          type="number"
-          placeholder="Cena za litr"
-          value={pricePerLiter}
-          onChange={(e) => setPricePerLiter(e.target.value)}
-        />
-      ) : (
-        <input
-          type="number"
-          placeholder="Koszt całkowity"
-          value={totalCost}
-          onChange={(e) => setTotalCost(e.target.value)}
-        />
-      )}
+      {/* KOSZT CAŁKOWITY */}
+      <input
+        type="number"
+        step="0.01"
+        placeholder="Koszt całkowity"
+        value={
+          lastEdited === "price"
+            ? calculatedTotal
+            : totalCost
+        }
+        onChange={(e) => {
+          setLastEdited("total")
+          setTotalCost(e.target.value)
+        }}
+        required
+      />
 
       {/* PRZEBIEG */}
       <input
@@ -140,7 +129,9 @@ function FuelForm({ onAdd, carId }: Props) {
         required
       />
 
-      <button type="submit">Dodaj tankowanie</button>
+      <button type="submit">
+        Dodaj
+      </button>
     </form>
   )
 }

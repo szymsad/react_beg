@@ -1,36 +1,15 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid
-} from "recharts"
-
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import type { FuelEntry } from "../types/FuelEntry"
+import { calcConsumptionData } from "../utils/fuelCalculations"
 
 interface Props {
   entries: FuelEntry[]
 }
 
 function FuelChart({ entries }: Props) {
-  const data = entries.map((entry, index) => {
-    let consumption = null
-
-    if (index > 0) {
-      const prev = entries[index - 1]
-      const distance = entry.mileage - prev.mileage
-
-      if (distance > 0) {
-        consumption = (entry.liters / distance) * 100
-      }
-    }
-
-    return {
-      date: entry.date,
-      consumption
-    }
-  }).filter(d => d.consumption !== null)
+  const data = calcConsumptionData(entries)
+  // data to gotowy format { date, lper100km, cost, costPerKm }
+  // Recharts tego wymaga — masz teraz dwa wykresy za darmo
 
   return (
     <LineChart width={600} height={300} data={data}>
@@ -38,7 +17,7 @@ function FuelChart({ entries }: Props) {
       <XAxis dataKey="date" />
       <YAxis />
       <Tooltip />
-      <Line type="monotone" dataKey="consumption" stroke="#8884d8" />
+      <Line type="monotone" dataKey="lper100km" stroke="#8884d8" name="L/100km" />
     </LineChart>
   )
 }
