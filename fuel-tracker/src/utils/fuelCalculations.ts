@@ -1,34 +1,49 @@
-import type { FuelEntry } from "../types/FuelEntry"
+import type { FuelEntry, FuelType } from "../types/FuelEntry"
 
-// Oblicza spalanie dla każdego wpisu (relative do poprzedniego)
-export function calcConsumptionData(entries: FuelEntry[]) {
-  return entries
+// Zwraca dane do wykresu/statystyk dla danego typu paliwa
+export function calcConsumptionData(entries: FuelEntry[], fuelType?: FuelType) {
+  const filtered = fuelType
+    ? entries.filter(e => e.fuelType === fuelType)
+    : entries
+
+  return filtered
     .map((entry, index) => {
       if (index === 0) return null
-      const prev = entries[index - 1]
-      const distance = entry.mileage - prev.mileage
+      if (entry.missedPreviousRefuel) return null  // pomijamy obliczanie
+
+      const prev = filtered[index - 1]
+      let distance = entry.mileage - prev.mileage
+
+      // Dla LPG odejmujemy km przejechane na benzynie
+      if (entry.fuelType === 'lpg' && entry.kmOnPetrol) {
+        distance -= entry.kmOnPetrol
+      }
+
       if (distance <= 0) return null
 
       return {
         date: entry.date,
+        time: entry.time,
+        fuelType: entry.fuelType,
         lper100km: Number(((entry.liters / distance) * 100).toFixed(2)),
-        cost: Number((entry.liters * entry.pricePerLiter).toFixed(2)),
-        costPerKm: Number(((entry.liters * entry.pricePerLiter) / distance).toFixed(4)),
+        cost: entry.totalCost,
+        costPerKm: Number((entry.totalCost / distance).toFixed(4)),
+        isFullTank: entry.isFullTank,
       }
     })
     .filter((d): d is NonNullable<typeof d> => d !== null)
 }
 
-// Średnie spalanie
-export function calcAvgConsumption(entries: FuelEntry[]): number {
-  const data = calcConsumptionData(entries)
-  if (data.length === 0) return 0
+export function calcAvgConsumption(entries: FuelEntry[], fuelType?: FuelType): number {
+  const data = calcConsumptionData(entries, fuelType)
+  // liczymy tylko pełne tankowania do średniej
+  const fullTankData = data.filter(d => d.isFullTank)
+  if (fullTankData.length === 0) return 0
   return Number(
-    (data.reduce((sum, d) => sum + d.lper100km, 0) / data.length).toFixed(2)
+    (fullTankData.reduce((sum, d) => sum + d.lper100km, 0) / fullTankData.length).toFixed(2)
   )
 }
 
-// Koszt danego wpisu
 export function calcEntryCost(entry: FuelEntry): number {
-  return Number((entry.liters * entry.pricePerLiter).toFixed(2))
+  return Number(entry.totalCost.toFixed(2))
 }

@@ -7,7 +7,7 @@ export async function getFuelEntries(): Promise<FuelEntry[]> {
   const cached = localStorage.getItem(STORAGE_KEY)
 
   if (cached) {
-    return JSON.parse(cached)
+    //return JSON.parse(cached)
   }
 
   // później: replace with API call

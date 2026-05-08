@@ -10,7 +10,7 @@ import { getFuelEntries, saveFuelEntries } from "./services/fuelService"
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>([])
-
+  const [showForm, setShowForm] = useState(false)   
 
   const { selectedCarId, setSelectedCarId } = useCar()
 
@@ -28,6 +28,7 @@ function App() {
 
   function handleAddEntry(entry: FuelEntry) {
     setEntries(prev => [...prev, entry])
+    setShowForm(false)
   }
 
   return (
@@ -50,9 +51,6 @@ function App() {
         </select>
       </div>
 
-      <div className="card">
-        <FuelForm onAdd={handleAddEntry} />
-      </div>
 
       <div className="card">
         <FuelStats entries={filteredEntries} />
@@ -60,6 +58,19 @@ function App() {
       <div className="card">
         <FuelChart entries={filteredEntries} />
       </div>
+
+      
+      <button onClick={() => setShowForm(prev => !prev)}>
+        {showForm ? "✕ Anuluj" : "+ Dodaj tankowanie"}
+      </button>
+
+      {showForm && (
+        <div className="card">
+          <FuelForm onAdd={handleAddEntry} />
+        </div>
+      )}
+
+      
 
       <div className="card">
         <FuelList entries={filteredEntries} />

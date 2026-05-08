@@ -9,7 +9,8 @@ interface Props {
 }
 
 function FuelStats({ entries }: Props) {
-  const avgConsumption = calcAvgConsumption(entries)
+  const avgPetrol = calcAvgConsumption(entries, 'petrol')
+  const avgLpg = calcAvgConsumption(entries, 'lpg')
 
   const totalCost = entries.reduce((sum, entry) => {
     return sum + entry.totalCost
@@ -36,10 +37,18 @@ function FuelStats({ entries }: Props) {
 
       <div className="stats-grid">
 
-        <div className="card">
-          <h3>Średnie spalanie</h3>
-          <p>{avgConsumption} L/100km</p>
-        </div>
+        {avgPetrol > 0 && (
+          <div className="card">
+            <h3>Średnie spalanie ⛽</h3>
+            <p>{avgPetrol} L/100km</p>
+          </div>
+        )}
+        {avgLpg > 0 && (
+          <div className="card">
+            <h3>Średnie spalanie 🟢</h3>
+            <p>{avgLpg} L/100km</p>
+          </div>
+        )}
 
         <div className="card">
           <h3>Łączny koszt</h3>
