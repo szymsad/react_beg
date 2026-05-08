@@ -2,24 +2,17 @@ import { useEffect, useState } from "react"
 import FuelList from "./components/FuelList"
 import FuelForm from "./components/FuelForm"
 import FuelChart from "./components/FuelChart"
-import { mockFuelData, mockCars } from "./data/mockData"
-import { useCar } from "./context/CarContext"
+import { mockCars } from "./data/mockData"
 import type { FuelEntry } from "./types/FuelEntry"
 import FuelStats from "./components/FuelStats"
+import { useCar } from "./context/CarContext"
 import { getFuelEntries, saveFuelEntries } from "./services/fuelService"
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>([])
-  const [selectedCarId, setSelectedCarId] = useState<number>(() => {
-  const saved = localStorage.getItem("selectedCar")
-  return saved ? Number(saved) : 1
-})
 
 
-  
-  useEffect(() => {
-    localStorage.setItem("selectedCar", String(selectedCarId))
-  }, [selectedCarId])
+  const { selectedCarId, setSelectedCarId } = useCar()
 
   useEffect(() => {
   getFuelEntries().then(setEntries)

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState } from "react"
 import type { ReactNode } from "react"
 
 type CarContextType = {
@@ -8,10 +8,20 @@ type CarContextType = {
 
 const CarContext = createContext<CarContextType | null>(null)
 
-
 export function CarProvider({ children }: { children: ReactNode }) {
-  const [selectedCarId, setSelectedCarId] = useState<number | null>(1)
-  //                                                              ^ domyślnie pierwsze auto
+  const [selectedCarId, setSelectedCarIdState] = useState<number | null>(() => {
+    const saved = localStorage.getItem("selectedCar")
+    return saved ? Number(saved) : 1
+  })
+
+  function setSelectedCarId(id: number | null) {
+    setSelectedCarIdState(id)
+    if (id !== null) {
+      localStorage.setItem("selectedCar", String(id))
+    } else {
+      localStorage.removeItem("selectedCar")
+    }
+  }
 
   return (
     <CarContext.Provider value={{ selectedCarId, setSelectedCarId }}>
@@ -21,7 +31,6 @@ export function CarProvider({ children }: { children: ReactNode }) {
 }
 
 export function useCar() {
-  
   const ctx = useContext(CarContext)
   if (!ctx) throw new Error("useCar musi być użyty wewnątrz CarProvider")
   return ctx
