@@ -1,0 +1,90 @@
+.fuel-list__empty {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.fuel-list__entries {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fuel-entry {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    background: white;
+}
+
+.fuel-entry__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.fuel-entry__fuel-type {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.fuel-entry__datetime {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.fuel-entry__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.fuel-entry__cell-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.fuel-entry__cell-value {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.fuel-entry__cell-value--cost {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.fuel-entry__flags {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.fuel-entry__tag {
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.fuel-entry__tag--warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.fuel-entry__tag--error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.fuel-entry__tag--info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.fuel-entry__tag--neutral {
+    background: #f3f4f6;
+    color: #374151;
+}

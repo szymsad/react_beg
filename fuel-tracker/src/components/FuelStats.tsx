@@ -14,9 +14,16 @@ function FuelStats({ entries }: Props) {
   const totalCost = entries.reduce((sum, e) => sum + e.totalCost, 0)
   const lastEntry = entries[entries.length - 1]
   const consumptionData = calcConsumptionData(entries)
+  const consumptionLpgData = calcConsumptionData(entries, "lpg")
+
+  const hasLpg = entries.some(e => e.fuelType === "lpg")
 
   const avgCostPerKm = consumptionData.length > 0
     ? (consumptionData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionData.length).toFixed(4)
+    : "0"
+
+  const avgCostLpgPerKm = consumptionLpgData.length > 0
+    ? (consumptionLpgData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionLpgData.length).toFixed(4)
     : "0"
 
   return (
@@ -29,7 +36,7 @@ function FuelStats({ entries }: Props) {
             <p>{avgPetrol} L/100km</p>
           </div>
         )}
-        {avgLpg > 0 && (
+        {hasLpg && avgLpg > 0 && (
           <div className="stat-card">
             <h3>Średnie spalanie 🟢</h3>
             <p>{avgLpg} L/100km</p>
@@ -57,6 +64,12 @@ function FuelStats({ entries }: Props) {
           <h3>Średni koszt / km</h3>
           <p>{avgCostPerKm} zł</p>
         </div>
+        {hasLpg && (
+          <div className="stat-card">
+            <h3>Średni koszt LPG / km</h3>
+            <p>{avgCostLpgPerKm} zł</p>
+          </div>
+        )}
       </div>
     </div>
   )

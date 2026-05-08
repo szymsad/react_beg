@@ -44,6 +44,7 @@ export function calcAvgConsumption(entries: FuelEntry[], fuelType?: FuelType): n
   )
 }
 
+
 export function calcEntryCost(entry: FuelEntry): number {
   return Number(entry.totalCost.toFixed(2))
 }
