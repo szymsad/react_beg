@@ -1,79 +1,62 @@
+import "./FuelStats.css"
 import type { FuelEntry } from "../types/FuelEntry"
-import {
-  calcAvgConsumption,
-  calcConsumptionData
-} from "../utils/fuelCalculations"
+import { calcAvgConsumption, calcConsumptionData } from "../utils/fuelCalculations"
 
 interface Props {
   entries: FuelEntry[]
 }
 
 function FuelStats({ entries }: Props) {
-  const avgPetrol = calcAvgConsumption(entries, 'petrol')
-  const avgLpg = calcAvgConsumption(entries, 'lpg')
+  const avgPetrol = calcAvgConsumption(entries, "petrol")
+  const avgLpg = calcAvgConsumption(entries, "lpg")
+  const avgDiesel = calcAvgConsumption(entries, "diesel")
 
-  const totalCost = entries.reduce((sum, entry) => {
-    return sum + entry.totalCost
-  }, 0)
-
-  const totalRefuels = entries.length
-
+  const totalCost = entries.reduce((sum, e) => sum + e.totalCost, 0)
   const lastEntry = entries[entries.length - 1]
-
   const consumptionData = calcConsumptionData(entries)
 
-  const avgCostPerKm =
-    consumptionData.length > 0
-      ? (
-          consumptionData.reduce((sum, item) => {
-            return sum + item.costPerKm
-          }, 0) / consumptionData.length
-        ).toFixed(2)
-      : "0"
+  const avgCostPerKm = consumptionData.length > 0
+    ? (consumptionData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionData.length).toFixed(4)
+    : "0"
 
   return (
     <div>
       <h2>Statystyki</h2>
-
       <div className="stats-grid">
-
         {avgPetrol > 0 && (
-          <div className="card">
+          <div className="stat-card">
             <h3>Średnie spalanie ⛽</h3>
             <p>{avgPetrol} L/100km</p>
           </div>
         )}
         {avgLpg > 0 && (
-          <div className="card">
+          <div className="stat-card">
             <h3>Średnie spalanie 🟢</h3>
             <p>{avgLpg} L/100km</p>
           </div>
         )}
-
-        <div className="card">
+        {avgDiesel > 0 && (
+          <div className="stat-card">
+            <h3>Średnie spalanie 🛢️</h3>
+            <p>{avgDiesel} L/100km</p>
+          </div>
+        )}
+        <div className="stat-card">
           <h3>Łączny koszt</h3>
           <p>{totalCost.toFixed(2)} zł</p>
         </div>
-
-        <div className="card">
+        <div className="stat-card">
           <h3>Liczba tankowań</h3>
-          <p>{totalRefuels}</p>
+          <p>{entries.length}</p>
         </div>
-
-        <div className="card">
+        <div className="stat-card">
           <h3>Ostatnie tankowanie</h3>
-          <p>
-            {lastEntry
-              ? `${lastEntry.totalCost.toFixed(2)} zł`
-              : "-"}
-          </p>
+          <p>{lastEntry ? `${lastEntry.totalCost.toFixed(2)} zł` : "—"}</p>
         </div>
-
-        <div className="card">
+        <div className="stat-card">
           <h3>Średni koszt / km</h3>
           <p>{avgCostPerKm} zł</p>
         </div>
-
       </div>
     </div>
   )

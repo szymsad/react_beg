@@ -1,3 +1,4 @@
+import "./FuelForm.css"
 import { useState } from "react"
 import type { FuelEntry, FuelType } from "../types/FuelEntry"
 import { useCar } from "../context/CarContext"
@@ -7,7 +8,6 @@ interface Props {
   onAdd: (entry: FuelEntry) => void
 }
 
-// Pomocnicza funkcja do pobrania aktualnej daty i czasu
 function getNow() {
   const now = new Date()
   const date = now.toISOString().split("T")[0]
@@ -23,9 +23,7 @@ function FuelForm({ onAdd }: Props) {
 
   const [date, setDate] = useState(nowDate)
   const [time, setTime] = useState(nowTime)
-  const [fuelType, setFuelType] = useState<FuelType>(
-    currentCar?.tanks[0] ?? 'petrol'
-  )
+  const [fuelType, setFuelType] = useState<FuelType>(currentCar?.tanks[0] ?? "petrol")
   const [liters, setLiters] = useState("")
   const [pricePerLiter, setPricePerLiter] = useState("")
   const [totalCost, setTotalCost] = useState("")
@@ -45,6 +43,12 @@ function FuelForm({ onAdd }: Props) {
     litersNum > 0 && Number(totalCost) > 0
       ? (Number(totalCost) / litersNum).toFixed(2)
       : ""
+
+  const fuelLabels: Record<FuelType, string> = {
+    petrol: "⛽ Benzyna",
+    lpg: "🟢 LPG",
+    diesel: "🛢️ Diesel",
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -66,43 +70,31 @@ function FuelForm({ onAdd }: Props) {
       isFullTank,
       tankLevelAfter: !isFullTank && tankLevelAfter ? Number(tankLevelAfter) : undefined,
       missedPreviousRefuel,
-      kmOnPetrol: fuelType === 'lpg' && kmOnPetrol ? Number(kmOnPetrol) : undefined,
+      kmOnPetrol: fuelType === "lpg" && kmOnPetrol ? Number(kmOnPetrol) : undefined,
     }
 
     onAdd(newEntry)
 
-    // reset z zachowaniem aktualnej daty/czasu
     const { date: d, time: t } = getNow()
     setDate(d); setTime(t)
     setLiters(""); setPricePerLiter(""); setTotalCost(""); setMileage("")
     setIsFullTank(true); setTankLevelAfter(""); setMissedPreviousRefuel(false); setKmOnPetrol("")
   }
 
-  const fuelLabels: Record<FuelType, string> = {
-    petrol: '⛽ Benzyna',
-    lpg: '🟢 LPG',
-    diesel: '🛢️ Diesel',
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="fuel-form" onSubmit={handleSubmit}>
       <h2>Dodaj tankowanie</h2>
 
-      {/* WYBÓR PALIWA */}
       {currentCar && currentCar.tanks.length > 1 && (
-        <div>
+        <div className="fuel-form__fuel-selector">
           <label>Paliwo:</label>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <div className="fuel-form__fuel-buttons">
             {currentCar.tanks.map(tank => (
               <button
                 key={tank}
                 type="button"
+                className={`fuel-form__fuel-btn ${fuelType === tank ? "fuel-form__fuel-btn--active" : ""}`}
                 onClick={() => setFuelType(tank)}
-                style={{
-                  background: fuelType === tank ? '#2563eb' : '#e5e7eb',
-                  color: fuelType === tank ? 'white' : 'black',
-                  flex: 1,
-                }}
               >
                 {fuelLabels[tank]}
               </button>
@@ -111,108 +103,48 @@ function FuelForm({ onAdd }: Props) {
         </div>
       )}
 
-      {/* DATA + CZAS */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          required
-          style={{ flex: 2 }}
-        />
-        <input
-          type="time"
-          value={time}
-          onChange={e => setTime(e.target.value)}
-          required
-          style={{ flex: 1 }}
-        />
+      <div className="fuel-form__row">
+        <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+        <input type="time" value={time} onChange={e => setTime(e.target.value)} required />
       </div>
 
-      {/* PRZEBIEG */}
-      <input
-        type="number"
-        placeholder="Przebieg (km)"
-        value={mileage}
-        onChange={e => setMileage(e.target.value)}
-        required
-      />
+      <input type="number" placeholder="Przebieg (km)" value={mileage} onChange={e => setMileage(e.target.value)} required />
+      <input type="number" step="0.01" placeholder="Litry" value={liters} onChange={e => setLiters(e.target.value)} required />
 
-      {/* LITRY */}
       <input
-        type="number"
-        step="0.01"
-        placeholder="Litry"
-        value={liters}
-        onChange={e => setLiters(e.target.value)}
-        required
-      />
-
-      {/* CENA ZA LITR */}
-      <input
-        type="number"
-        step="0.01"
-        placeholder="Cena za litr"
+        type="number" step="0.01" placeholder="Cena za litr"
         value={lastEdited === "total" ? calculatedPrice : pricePerLiter}
         onChange={e => { setLastEdited("price"); setPricePerLiter(e.target.value) }}
         required
       />
-
-      {/* KOSZT CAŁKOWITY */}
       <input
-        type="number"
-        step="0.01"
-        placeholder="Koszt całkowity"
+        type="number" step="0.01" placeholder="Koszt całkowity"
         value={lastEdited === "price" ? calculatedTotal : totalCost}
         onChange={e => { setLastEdited("total"); setTotalCost(e.target.value) }}
         required
       />
 
-      {/* DO PEŁNA */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
-        <input
-          type="checkbox"
-          checked={isFullTank}
-          onChange={e => setIsFullTank(e.target.checked)}
-          style={{ width: 'auto' }}
-        />
+      <label className="fuel-form__checkbox-label">
+        <input type="checkbox" checked={isFullTank} onChange={e => setIsFullTank(e.target.checked)} />
         Tankowanie do pełna
       </label>
 
-      {/* POZIOM ZBIORNIKA — tylko jeśli nie do pełna */}
       {!isFullTank && (
-        <input
-          type="number"
-          step="0.1"
-          placeholder="Ile litrów w zbiorniku po tankowaniu"
-          value={tankLevelAfter}
-          onChange={e => setTankLevelAfter(e.target.value)}
-        />
+        <input type="number" step="0.1" placeholder="Ile litrów w zbiorniku po tankowaniu"
+          value={tankLevelAfter} onChange={e => setTankLevelAfter(e.target.value)} />
       )}
 
-      {/* KM NA BENZYNIE — tylko dla LPG */}
-      {fuelType === 'lpg' && (
-        <input
-          type="number"
-          step="0.1"
-          placeholder="Km przejechane na benzynie (gdy skończył się gaz)"
-          value={kmOnPetrol}
-          onChange={e => setKmOnPetrol(e.target.value)}
-        />
+      {fuelType === "lpg" && (
+        <input type="number" step="0.1" placeholder="Km przejechane na benzynie (gdy skończył się gaz)"
+          value={kmOnPetrol} onChange={e => setKmOnPetrol(e.target.value)} />
       )}
 
-      {/* POMINIĘTO POPRZEDNIE TANKOWANIE */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
-        <input
-          type="checkbox"
-          checked={missedPreviousRefuel}
-          onChange={e => setMissedPreviousRefuel(e.target.checked)}
-          style={{ width: 'auto' }}
-        />
+      <label className="fuel-form__checkbox-label">
+        <input type="checkbox" checked={missedPreviousRefuel} onChange={e => setMissedPreviousRefuel(e.target.checked)} />
         Pominięto poprzednie tankowanie (nie licz spalania)
       </label>
 
-      <button type="submit">Dodaj</button>
+      <button type="submit" className="fuel-form__submit">Dodaj</button>
     </form>
   )
 }
