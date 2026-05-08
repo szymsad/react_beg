@@ -195,7 +195,7 @@ function FuelForm({ onAdd }: Props) {
         <input
           type="number"
           step="0.1"
-          placeholder="Km przejechane na benzynie (przed włączeniem gazu)"
+          placeholder="Km przejechane na benzynie (gdy skończył się gaz)"
           value={kmOnPetrol}
           onChange={e => setKmOnPetrol(e.target.value)}
         />
