@@ -4,6 +4,8 @@ import { calcEntryCost } from "../utils/fuelCalculations"
 
 interface Props {
   entries: FuelEntry[]
+  onEdit: (entry: FuelEntry) => void   
+  onDelete: (id: number) => void        
 }
 
 const FUEL_ICON: Record<string, string> = {
@@ -47,7 +49,7 @@ function getConsumption(entries: FuelEntry[], index: number): number | null {
   return null
 }
 
-function FuelList({ entries }: Props) {
+function FuelList({  entries, onEdit, onDelete }: Props) {
   if (entries.length === 0) {
     return (
       <div>
@@ -131,6 +133,24 @@ function FuelList({ entries }: Props) {
                     📝 {entry.note}
                   </span>
                 )}
+              </div>
+
+              {/* PRZYCISKI AKCJI ← NOWE */}
+              <div className="fuel-entry__actions">
+                <button
+                  className="fuel-entry__btn-edit"
+                  onClick={() => onEdit(entry)}
+                >
+                  ✏️ Edytuj
+                </button>
+                <button
+                  className="fuel-entry__btn-delete"
+                  onClick={() => {
+                    if (confirm("Usunąć to tankowanie?")) onDelete(entry.id)
+                  }}
+                >
+                  🗑️ Usuń
+                </button>
               </div>
             </div>
           )

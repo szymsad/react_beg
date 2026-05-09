@@ -6,43 +6,47 @@ import { mockCars } from "../data/mockData"
 
 interface Props {
   onAdd: (entry: FuelEntry) => void
+  initialEntry?: FuelEntry   // ← NOWE: tryb edycji
 }
 
 function getNow() {
   const now = new Date()
-  const date = now.toISOString().split("T")[0]
-  const time = now.toTimeString().slice(0, 5)
-  return { date, time }
+  return {
+    date: now.toISOString().split("T")[0],
+    time: now.toTimeString().slice(0, 5),
+  }
 }
 
-function FuelForm({ onAdd }: Props) {
+function FuelForm({ onAdd, initialEntry }: Props) {
   const { selectedCarId } = useCar()
   const currentCar = mockCars.find(c => c.id === selectedCarId)
+  const isEditing = !!initialEntry
 
   const { date: nowDate, time: nowTime } = getNow()
 
-  const [date, setDate] = useState(nowDate)
-  const [time, setTime] = useState(nowTime)
-  const [fuelType, setFuelType] = useState<FuelType>(currentCar?.tanks[0] ?? "petrol")
-  const [liters, setLiters] = useState("")
-  const [pricePerLiter, setPricePerLiter] = useState("")
-  const [totalCost, setTotalCost] = useState("")
-  const [mileage, setMileage] = useState("")
-  const [isFullTank, setIsFullTank] = useState(true)
-  const [tankLevelAfter, setTankLevelAfter] = useState("")
-  const [missedPreviousRefuel, setMissedPreviousRefuel] = useState(false)
-  const [kmOnPetrol, setKmOnPetrol] = useState("")
+  // Inicjalizacja z initialEntry jeśli edytujemy
+  const [date, setDate] = useState(initialEntry?.date ?? nowDate)
+  const [time, setTime] = useState(initialEntry?.time ?? nowTime)
+  const [fuelType, setFuelType] = useState<FuelType>(
+    initialEntry?.fuelType ?? currentCar?.tanks[0] ?? "petrol"
+  )
+  const [liters, setLiters] = useState(initialEntry?.liters.toString() ?? "")
+  const [pricePerLiter, setPricePerLiter] = useState(initialEntry?.pricePerLiter.toString() ?? "")
+  const [totalCost, setTotalCost] = useState(initialEntry?.totalCost.toString() ?? "")
+  const [mileage, setMileage] = useState(initialEntry?.mileage.toString() ?? "")
+  const [isFullTank, setIsFullTank] = useState(initialEntry?.isFullTank ?? true)
+  const [tankLevelAfter, setTankLevelAfter] = useState(initialEntry?.tankLevelAfter?.toString() ?? "")
+  const [missedPreviousRefuel, setMissedPreviousRefuel] = useState(initialEntry?.missedPreviousRefuel ?? false)
+  const [kmOnPetrol, setKmOnPetrol] = useState(initialEntry?.kmOnPetrol?.toString() ?? "")
   const [lastEdited, setLastEdited] = useState<"price" | "total">("price")
 
   const litersNum = Number(liters)
   const calculatedTotal =
     litersNum > 0 && Number(pricePerLiter) > 0
-      ? (litersNum * Number(pricePerLiter)).toFixed(2)
-      : ""
+      ? (litersNum * Number(pricePerLiter)).toFixed(2) : ""
   const calculatedPrice =
     litersNum > 0 && Number(totalCost) > 0
-      ? (Number(totalCost) / litersNum).toFixed(2)
-      : ""
+      ? (Number(totalCost) / litersNum).toFixed(2) : ""
 
   const fuelLabels: Record<FuelType, string> = {
     petrol: "⛽ Benzyna",
@@ -57,9 +61,9 @@ function FuelForm({ onAdd }: Props) {
     const finalPrice = lastEdited === "price" ? Number(pricePerLiter) : Number(calculatedPrice)
     const finalTotal = lastEdited === "total" ? Number(totalCost) : Number(calculatedTotal)
 
-    const newEntry: FuelEntry = {
-      id: Date.now(),
-      carId: selectedCarId,
+    const entry: FuelEntry = {
+      id: initialEntry?.id ?? Date.now(),  // zachowaj id przy edycji
+      carId: initialEntry?.carId ?? selectedCarId,
       fuelType,
       date,
       time,
@@ -73,17 +77,19 @@ function FuelForm({ onAdd }: Props) {
       kmOnPetrol: fuelType === "lpg" && kmOnPetrol ? Number(kmOnPetrol) : undefined,
     }
 
-    onAdd(newEntry)
+    onAdd(entry)
 
-    const { date: d, time: t } = getNow()
-    setDate(d); setTime(t)
-    setLiters(""); setPricePerLiter(""); setTotalCost(""); setMileage("")
-    setIsFullTank(true); setTankLevelAfter(""); setMissedPreviousRefuel(false); setKmOnPetrol("")
+    if (!isEditing) {
+      const { date: d, time: t } = getNow()
+      setDate(d); setTime(t)
+      setLiters(""); setPricePerLiter(""); setTotalCost(""); setMileage("")
+      setIsFullTank(true); setTankLevelAfter(""); setMissedPreviousRefuel(false); setKmOnPetrol("")
+    }
   }
 
   return (
     <form className="fuel-form" onSubmit={handleSubmit}>
-      <h2>Dodaj tankowanie</h2>
+      {!isEditing && <h2>Dodaj tankowanie</h2>}
 
       {currentCar && currentCar.tanks.length > 1 && (
         <div className="fuel-form__fuel-selector">
@@ -135,7 +141,7 @@ function FuelForm({ onAdd }: Props) {
       )}
 
       {fuelType === "lpg" && (
-        <input type="number" step="0.1" placeholder="Km przejechane na benzynie (gdy skończył się gaz)"
+        <input type="number" step="0.1" placeholder="Km przejechane na benzynie"
           value={kmOnPetrol} onChange={e => setKmOnPetrol(e.target.value)} />
       )}
 
@@ -144,7 +150,9 @@ function FuelForm({ onAdd }: Props) {
         Pominięto poprzednie tankowanie (nie licz spalania)
       </label>
 
-      <button type="submit" className="fuel-form__submit">Dodaj</button>
+      <button type="submit" className="fuel-form__submit">
+        {isEditing ? "Zapisz zmiany" : "Dodaj"}
+      </button>
     </form>
   )
 }

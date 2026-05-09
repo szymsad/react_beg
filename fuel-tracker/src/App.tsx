@@ -8,10 +8,12 @@ import FuelStats from "./components/FuelStats"
 import FuelChart from "./components/FuelChart"
 import FuelForm from "./components/FuelForm"
 import FuelList from "./components/FuelList"
+import Modal from "./components/Modal"
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [editingEntry, setEditingEntry] = useState<FuelEntry | null>(null)  // ← NOWE
   const { selectedCarId, setSelectedCarId } = useCar()
 
   useEffect(() => { getFuelEntries().then(setEntries) }, [])
@@ -24,6 +26,15 @@ function App() {
   function handleAddEntry(entry: FuelEntry) {
     setEntries(prev => [...prev, entry])
     setShowForm(false)
+  }
+
+  function handleEditEntry(updated: FuelEntry) {
+    setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
+    setEditingEntry(null)
+  }
+
+  function handleDeleteEntry(id: number) {
+    setEntries(prev => prev.filter(e => e.id !== id))
   }
 
   return (
@@ -65,8 +76,22 @@ function App() {
       )}
 
       <div className="card">
-        <FuelList entries={filteredEntries} />
+        <FuelList
+          entries={filteredEntries}
+          onEdit={setEditingEntry}
+          onDelete={handleDeleteEntry}
+        />
       </div>
+
+      {/* MODAL EDYCJI */}
+      {editingEntry && (
+        <Modal title="Edytuj tankowanie" onClose={() => setEditingEntry(null)}>
+          <FuelForm
+            onAdd={handleEditEntry}
+            initialEntry={editingEntry}
+          />
+        </Modal>
+      )}
     </div>
   )
 }

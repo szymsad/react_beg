@@ -88,3 +88,33 @@
     background: #f3f4f6;
     color: #374151;
 }
+
+.fuel-entry__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.fuel-entry__btn-edit {
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 13px;
+    padding: 6px 12px;
+}
+
+.fuel-entry__btn-edit:hover {
+    background: #e5e7eb;
+}
+
+.fuel-entry__btn-delete {
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 13px;
+    padding: 6px 12px;
+}
+
+.fuel-entry__btn-delete:hover {
+    background: #fecaca;
+}
