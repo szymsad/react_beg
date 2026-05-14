@@ -12,6 +12,9 @@ interface Props {
 function CarForm({ onAdd }: Props) {
   const [name, setName] = useState("")
   const [plate, setPlate] = useState("")
+  const [make, setMake] = useState("")
+  const [model, setModel] = useState("")
+  const [year, setYear] = useState("")
 
   const [tanks, setTanks] = useState<FuelTankType[]>([])
 
@@ -37,6 +40,9 @@ function CarForm({ onAdd }: Props) {
       id: Date.now(),
       name,
       plate,
+      make,
+      model,
+      year: Number(year),
       tanks,
     }
 
@@ -44,6 +50,9 @@ function CarForm({ onAdd }: Props) {
 
     setName("")
     setPlate("")
+    setMake("")
+    setModel("")
+    setYear("")
     setTanks([])
   }
 
@@ -56,7 +65,7 @@ function CarForm({ onAdd }: Props) {
 
         <input
           type="text"
-          placeholder="Np. Audi A4"
+          placeholder="Np. Audi Nowe"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -71,6 +80,39 @@ function CarForm({ onAdd }: Props) {
           placeholder="Np. WA12345"
           value={plate}
           onChange={(e) => setPlate(e.target.value)}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Marka</label>
+
+        <input
+          type="text"
+          placeholder="Np. Ford"
+          value={make}
+          onChange={(e) => setMake(e.target.value)}
+        />
+      </div>
+
+    <div className="form-group">
+        <label>Model</label>
+
+        <input
+          type="text"
+          placeholder="Np. Focus"
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Rok produkcji</label>
+
+        <input
+          type="number"
+          placeholder="2026"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
         />
       </div>
 
