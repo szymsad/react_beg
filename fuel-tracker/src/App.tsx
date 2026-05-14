@@ -1,168 +1,174 @@
-import "./App.css"
 import { useEffect, useState } from "react"
-import { useCar } from "./context/CarContext"
-import { carApi, fuelApi } from "./services/fuelService"
-import type { Car } from "./types/Car"
+import "./App.css"
+
 import type { FuelEntry } from "./types/FuelEntry"
-import FuelStats from "./components/FuelStats"
-import FuelChart from "./components/FuelChart"
+import type { Car } from "./types/Car"
+
+import { useCar } from "./context/CarContext"
+
 import FuelForm from "./components/FuelForm"
 import FuelList from "./components/FuelList"
-import Modal from "./components/Modal"
+import FuelChart from "./components/FuelChart"
+import FuelStats from "./components/FuelStats"
+
+const API_FUEL = "http://localhost:5103/api/entries"
+const API_CARS = "http://localhost:5103/api/cars"
 
 function App() {
-  const [cars, setCars] = useState<Car[]>([])
   const [entries, setEntries] = useState<FuelEntry[]>([])
-  const [showForm, setShowForm] = useState(false)
-  const [editingEntry, setEditingEntry] = useState<FuelEntry | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [cars, setCars] = useState<Car[]>([])
 
   const { selectedCarId, setSelectedCarId } = useCar()
 
-  // Załaduj auta przy starcie
   useEffect(() => {
-    carApi.getAll()
-      .then(data => {
-        setCars(data)
-        // Ustaw pierwsze auto jeśli żadne nie wybrane
-        if (!selectedCarId && data.length > 0) {
-          setSelectedCarId(data[0].id)
-        }
-      })
-      .catch(() => setError("Nie można załadować aut. Czy backend działa?"))
+    fetchEntries()
+    fetchCars()
   }, [])
 
-  // Załaduj tankowania gdy zmienia się wybrane auto
-  useEffect(() => {
-    if (!selectedCarId) return
-    setLoading(true)
-    fuelApi.getByCarId(selectedCarId)
-      .then(data => { setEntries(data); setLoading(false) })
-      .catch(() => { setError("Błąd ładowania tankowań."); setLoading(false) })
-  }, [selectedCarId])
-
-  async function handleAddEntry(entry: FuelEntry) {
+  async function fetchEntries() {
     try {
-      const created = await fuelApi.create({
-        carId: entry.carId,
-        fuelType: entry.fuelType,
-        date: entry.date,
-        time: entry.time,
-        liters: entry.liters,
-        pricePerLiter: entry.pricePerLiter,
-        totalCost: entry.totalCost,
-        mileage: entry.mileage,
-        isFullTank: entry.isFullTank,
-        tankLevelAfter: entry.tankLevelAfter,
-        missedPreviousRefuel: entry.missedPreviousRefuel,
-        kmOnPetrol: entry.kmOnPetrol,
-        note: entry.note,
-      })
-      setEntries(prev => [...prev, created])
-      setShowForm(false)
-    } catch {
-      setError("Błąd podczas dodawania tankowania.")
+      const response = await fetch(API_FUEL)
+
+      if (!response.ok) {
+        throw new Error("Błąd pobierania tankowań")
+      }
+
+      const data = await response.json()
+
+      setEntries(data)
+    } catch (error) {
+      console.error(error)
     }
   }
 
-  async function handleEditEntry(entry: FuelEntry) {
+  async function fetchCars() {
     try {
-      const updated = await fuelApi.update(entry.id, {
-        carId: entry.carId,
-        fuelType: entry.fuelType,
-        date: entry.date,
-        time: entry.time,
-        liters: entry.liters,
-        pricePerLiter: entry.pricePerLiter,
-        totalCost: entry.totalCost,
-        mileage: entry.mileage,
-        isFullTank: entry.isFullTank,
-        tankLevelAfter: entry.tankLevelAfter,
-        missedPreviousRefuel: entry.missedPreviousRefuel,
-        kmOnPetrol: entry.kmOnPetrol,
-        note: entry.note,
+      const response = await fetch(API_CARS)
+
+      if (!response.ok) {
+        throw new Error("Błąd pobierania aut")
+      }
+
+      const data = await response.json()
+
+      setCars(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function handleAddEntry(entry: FuelEntry) {
+    try {
+      const response = await fetch(API_FUEL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(entry),
       })
-      setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
-      setEditingEntry(null)
-    } catch {
-      setError("Błąd podczas edycji tankowania.")
+
+      if (!response.ok) {
+        throw new Error("Błąd dodawania tankowania")
+      }
+
+      const createdEntry = await response.json()
+
+      setEntries(prev => [...prev, createdEntry])
+    } catch (error) {
+      console.error(error)
     }
   }
 
   async function handleDeleteEntry(id: number) {
-    try {
-      await fuelApi.delete(id)
-      setEntries(prev => prev.filter(e => e.id !== id))
-    } catch {
-      setError("Błąd podczas usuwania tankowania.")
+  try {
+    const response = await fetch(`${API_FUEL}/${id}`, {
+      method: "DELETE",
+    })
+
+    if (!response.ok) {
+      throw new Error("Błąd usuwania tankowania")
     }
+
+    setEntries(prev => prev.filter(e => e.id !== id))
+  } catch (error) {
+    console.error(error)
   }
+}
+
+async function handleEditEntry(updatedEntry: FuelEntry) {
+  try {
+    const response = await fetch(
+      `${API_FUEL}/${updatedEntry.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedEntry),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error("Błąd edycji tankowania")
+    }
+
+    setEntries(prev =>
+      prev.map(entry =>
+        entry.id === updatedEntry.id
+          ? updatedEntry
+          : entry
+      )
+    )
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+  const filteredEntries = selectedCarId
+    ? entries.filter(e => e.carId === selectedCarId)
+    : entries
 
   return (
     <div className="container">
-      <div className="app-header">
-        <h1>Fuel Tracker 🚗</h1>
-        <div className="car-selector">
-          <label htmlFor="car-select">Auto:</label>
-          <select
-            id="car-select"
-            value={selectedCarId ?? ""}
-            onChange={e => setSelectedCarId(Number(e.target.value))}
-          >
-            {cars.map(car => (
-              <option key={car.id} value={car.id}>
-                {car.name}{car.plate ? ` (${car.plate})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+      <h1>Fuel Tracker 🚗</h1>
+
+      <div className="card">
+        <h2>Wybierz auto</h2>
+
+        <select
+          value={selectedCarId ?? ""}
+          onChange={(e) => setSelectedCarId(Number(e.target.value))}
+        >
+          {cars.map(car => (
+            <option key={car.id} value={car.id}>
+              {car.name} ({car.plate})
+            </option>
+          ))}
+        </select>
       </div>
 
-      {error && (
-        <div className="app-error">
-          ⚠️ {error}
-          <button onClick={() => setError(null)}>✕</button>
-        </div>
-      )}
+      <div className="card">
+        <FuelForm
+          onAdd={handleAddEntry}
+          cars={cars}
+        />
+      </div>
 
-      {loading ? (
-        <div className="app-loading">Ładowanie...</div>
-      ) : (
-        <>
-          <div className="card">
-            <FuelStats entries={entries} />
-          </div>
+      <div className="card">
+        <FuelStats entries={filteredEntries} />
+      </div>
 
-          <div className="card">
-            <FuelChart entries={entries} />
-          </div>
+      <div className="card">
+        <FuelChart entries={filteredEntries} />
+      </div>
 
-          <button className="btn-add" onClick={() => setShowForm(prev => !prev)}>
-            {showForm ? "✕ Anuluj" : "+ Dodaj tankowanie"}
-          </button>
-
-          {showForm && (
-            <div className="card">
-              <FuelForm onAdd={handleAddEntry} />
-            </div>
-          )}
-
-          <div className="card">
-            <FuelList
-              entries={entries}
-              onEdit={setEditingEntry}
-              onDelete={handleDeleteEntry}
-            />
-          </div>
-
-          {editingEntry && (
-            <Modal title="Edytuj tankowanie" onClose={() => setEditingEntry(null)}>
-              <FuelForm onAdd={handleEditEntry} initialEntry={editingEntry} />
-            </Modal>
-          )}
-        </>
-      )}
+      <div className="card">
+        <FuelList
+          entries={filteredEntries}
+          onEdit={handleEditEntry}
+          onDelete={handleDeleteEntry}
+        />
+      </div>
     </div>
   )
 }

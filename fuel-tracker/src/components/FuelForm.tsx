@@ -1,157 +1,324 @@
+import { useEffect, useMemo, useState } from "react"
 import "./FuelForm.css"
-import { useState } from "react"
+
 import type { FuelEntry, FuelType } from "../types/FuelEntry"
+import type { Car } from "../types/Car"
+
 import { useCar } from "../context/CarContext"
-import { mockCars } from "../data/mockData"
 
 interface Props {
   onAdd: (entry: FuelEntry) => void
-  initialEntry?: FuelEntry   // ← NOWE: tryb edycji
+  cars: Car[]
+  initialEntry?: FuelEntry
 }
 
-function getNow() {
-  const now = new Date()
-  return {
-    date: now.toISOString().split("T")[0],
-    time: now.toTimeString().slice(0, 5),
-  }
-}
-
-function FuelForm({ onAdd, initialEntry }: Props) {
+function FuelForm({ onAdd, cars, initialEntry }: Props) {
   const { selectedCarId } = useCar()
-  const currentCar = mockCars.find(c => c.id === selectedCarId)
-  const isEditing = !!initialEntry
 
-  const { date: nowDate, time: nowTime } = getNow()
+  const currentCar = useMemo(() => {
+    return cars.find(car => car.id === selectedCarId)
+  }, [cars, selectedCarId])
 
-  // Inicjalizacja z initialEntry jeśli edytujemy
-  const [date, setDate] = useState(initialEntry?.date ?? nowDate)
-  const [time, setTime] = useState(initialEntry?.time ?? nowTime)
+  const now = new Date()
+
+  const defaultDate = now.toISOString().split("T")[0]
+
+  const defaultTime = now.toTimeString().slice(0, 5)
+
   const [fuelType, setFuelType] = useState<FuelType>(
-    initialEntry?.fuelType ?? currentCar?.tanks[0] ?? "petrol"
+    initialEntry?.fuelType ??
+      (currentCar?.tanks[0] as FuelType) ??
+      "petrol"
   )
-  const [liters, setLiters] = useState(initialEntry?.liters.toString() ?? "")
-  const [pricePerLiter, setPricePerLiter] = useState(initialEntry?.pricePerLiter.toString() ?? "")
-  const [totalCost, setTotalCost] = useState(initialEntry?.totalCost.toString() ?? "")
-  const [mileage, setMileage] = useState(initialEntry?.mileage.toString() ?? "")
-  const [isFullTank, setIsFullTank] = useState(initialEntry?.isFullTank ?? true)
-  const [tankLevelAfter, setTankLevelAfter] = useState(initialEntry?.tankLevelAfter?.toString() ?? "")
-  const [missedPreviousRefuel, setMissedPreviousRefuel] = useState(initialEntry?.missedPreviousRefuel ?? false)
-  const [kmOnPetrol, setKmOnPetrol] = useState(initialEntry?.kmOnPetrol?.toString() ?? "")
-  const [lastEdited, setLastEdited] = useState<"price" | "total">("price")
 
-  const litersNum = Number(liters)
-  const calculatedTotal =
-    litersNum > 0 && Number(pricePerLiter) > 0
-      ? (litersNum * Number(pricePerLiter)).toFixed(2) : ""
-  const calculatedPrice =
-    litersNum > 0 && Number(totalCost) > 0
-      ? (Number(totalCost) / litersNum).toFixed(2) : ""
+  const [date, setDate] = useState(
+    initialEntry?.date ?? defaultDate
+  )
 
-  const fuelLabels: Record<FuelType, string> = {
-    petrol: "⛽ Benzyna",
-    lpg: "🟢 LPG",
-    diesel: "🛢️ Diesel",
+  const [time, setTime] = useState(
+    initialEntry?.time ?? defaultTime
+  )
+
+  const [liters, setLiters] = useState(
+    initialEntry?.liters.toString() ?? ""
+  )
+
+  const [pricePerLiter, setPricePerLiter] = useState(
+    initialEntry?.pricePerLiter.toString() ?? ""
+  )
+
+  const [totalCost, setTotalCost] = useState(
+    initialEntry?.totalCost.toString() ?? ""
+  )
+
+  const [mileage, setMileage] = useState(
+    initialEntry?.mileage.toString() ?? ""
+  )
+
+  const [isFullTank, setIsFullTank] = useState(
+    initialEntry?.isFullTank ?? true
+  )
+
+  const [tankLevelAfter, setTankLevelAfter] = useState(
+    initialEntry?.tankLevelAfter?.toString() ?? ""
+  )
+
+  const [missedPreviousRefuel, setMissedPreviousRefuel] = useState(
+    initialEntry?.missedPreviousRefuel ?? false
+  )
+
+  const [kmOnPetrol, setKmOnPetrol] = useState(
+    initialEntry?.kmOnPetrol?.toString() ?? ""
+  )
+
+  const [note, setNote] = useState(
+    initialEntry?.note ?? ""
+  )
+
+  useEffect(() => {
+    if (!currentCar) return
+
+    if (!currentCar.tanks.includes(fuelType)) {
+      setFuelType(currentCar.tanks[0] as FuelType)
+    }
+  }, [currentCar, fuelType])
+
+  function handleLitersChange(value: string) {
+    setLiters(value)
+
+    const litersNum = Number(value)
+    const priceNum = Number(pricePerLiter)
+
+    if (litersNum > 0 && priceNum > 0) {
+      setTotalCost((litersNum * priceNum).toFixed(2))
+    }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handlePriceChange(value: string) {
+    setPricePerLiter(value)
+
+    const litersNum = Number(liters)
+    const priceNum = Number(value)
+
+    if (litersNum > 0 && priceNum > 0) {
+      setTotalCost((litersNum * priceNum).toFixed(2))
+    }
+  }
+
+  function handleTotalCostChange(value: string) {
+    setTotalCost(value)
+
+    const litersNum = Number(liters)
+    const totalNum = Number(value)
+
+    if (litersNum > 0 && totalNum > 0) {
+      setPricePerLiter((totalNum / litersNum).toFixed(2))
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
     if (!selectedCarId) return
 
-    const finalPrice = lastEdited === "price" ? Number(pricePerLiter) : Number(calculatedPrice)
-    const finalTotal = lastEdited === "total" ? Number(totalCost) : Number(calculatedTotal)
-
-    const entry: FuelEntry = {
-      id: initialEntry?.id ?? Date.now(),  // zachowaj id przy edycji
-      carId: initialEntry?.carId ?? selectedCarId,
+    const newEntry: FuelEntry = {
+      id: initialEntry?.id ?? Date.now(),
+      carId: selectedCarId,
       fuelType,
       date,
       time,
-      liters: litersNum,
-      pricePerLiter: finalPrice,
-      totalCost: finalTotal,
+      liters: Number(liters),
+      pricePerLiter: Number(pricePerLiter),
+      totalCost: Number(totalCost),
       mileage: Number(mileage),
       isFullTank,
-      tankLevelAfter: !isFullTank && tankLevelAfter ? Number(tankLevelAfter) : undefined,
       missedPreviousRefuel,
-      kmOnPetrol: fuelType === "lpg" && kmOnPetrol ? Number(kmOnPetrol) : undefined,
+      note: note || undefined,
+
+      ...(tankLevelAfter && {
+        tankLevelAfter: Number(tankLevelAfter),
+      }),
+
+      ...(kmOnPetrol && {
+        kmOnPetrol: Number(kmOnPetrol),
+      }),
     }
 
-    onAdd(entry)
+    await onAdd(newEntry)
 
-    if (!isEditing) {
-      const { date: d, time: t } = getNow()
-      setDate(d); setTime(t)
-      setLiters(""); setPricePerLiter(""); setTotalCost(""); setMileage("")
-      setIsFullTank(true); setTankLevelAfter(""); setMissedPreviousRefuel(false); setKmOnPetrol("")
+    if (!initialEntry) {
+      setLiters("")
+      setPricePerLiter("")
+      setTotalCost("")
+      setMileage("")
+      setTankLevelAfter("")
+      setKmOnPetrol("")
+      setNote("")
+      setIsFullTank(true)
+      setMissedPreviousRefuel(false)
+
+      const freshNow = new Date()
+
+      setDate(freshNow.toISOString().split("T")[0])
+      setTime(freshNow.toTimeString().slice(0, 5))
     }
   }
 
   return (
     <form className="fuel-form" onSubmit={handleSubmit}>
-      {!isEditing && <h2>Dodaj tankowanie</h2>}
+      <h2>
+        {initialEntry ? "Edytuj tankowanie" : "Dodaj tankowanie"}
+      </h2>
 
-      {currentCar && currentCar.tanks.length > 1 && (
-        <div className="fuel-form__fuel-selector">
-          <label>Paliwo:</label>
-          <div className="fuel-form__fuel-buttons">
-            {currentCar.tanks.map(tank => (
-              <button
-                key={tank}
-                type="button"
-                className={`fuel-form__fuel-btn ${fuelType === tank ? "fuel-form__fuel-btn--active" : ""}`}
-                onClick={() => setFuelType(tank)}
-              >
-                {fuelLabels[tank]}
-              </button>
-            ))}
-          </div>
+      <div className="form-group">
+        <label>Paliwo</label>
+
+        <select
+          value={fuelType}
+          onChange={(e) => setFuelType(e.target.value as FuelType)}
+        >
+          {currentCar?.tanks.map(tank => (
+            <option key={tank} value={tank}>
+              {tank.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Data</label>
+
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Godzina</label>
+
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Litry</label>
+
+        <input
+          type="number"
+          step="0.01"
+          value={liters}
+          onChange={(e) => handleLitersChange(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Cena za litr</label>
+
+          <input
+            type="number"
+            step="0.01"
+            value={pricePerLiter}
+            onChange={(e) => handlePriceChange(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Koszt całkowity</label>
+
+          <input
+            type="number"
+            step="0.01"
+            value={totalCost}
+            onChange={(e) => handleTotalCostChange(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Przebieg</label>
+
+        <input
+          type="number"
+          value={mileage}
+          onChange={(e) => setMileage(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="checkbox-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={isFullTank}
+            onChange={(e) => setIsFullTank(e.target.checked)}
+          />
+
+          Tankowanie do pełna
+        </label>
+      </div>
+
+      {!isFullTank && (
+        <div className="form-group">
+          <label>Stan zbiornika po tankowaniu (%)</label>
+
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={tankLevelAfter}
+            onChange={(e) => setTankLevelAfter(e.target.value)}
+          />
         </div>
       )}
 
-      <div className="fuel-form__row">
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
-        <input type="time" value={time} onChange={e => setTime(e.target.value)} required />
+      <div className="checkbox-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={missedPreviousRefuel}
+            onChange={(e) =>
+              setMissedPreviousRefuel(e.target.checked)
+            }
+          />
+
+          Pominięto poprzednie tankowanie
+        </label>
       </div>
 
-      <input type="number" placeholder="Przebieg (km)" value={mileage} onChange={e => setMileage(e.target.value)} required />
-      <input type="number" step="0.01" placeholder="Litry" value={liters} onChange={e => setLiters(e.target.value)} required />
-
-      <input
-        type="number" step="0.01" placeholder="Cena za litr"
-        value={lastEdited === "total" ? calculatedPrice : pricePerLiter}
-        onChange={e => { setLastEdited("price"); setPricePerLiter(e.target.value) }}
-        required
-      />
-      <input
-        type="number" step="0.01" placeholder="Koszt całkowity"
-        value={lastEdited === "price" ? calculatedTotal : totalCost}
-        onChange={e => { setLastEdited("total"); setTotalCost(e.target.value) }}
-        required
-      />
-
-      <label className="fuel-form__checkbox-label">
-        <input type="checkbox" checked={isFullTank} onChange={e => setIsFullTank(e.target.checked)} />
-        Tankowanie do pełna
-      </label>
-
-      {!isFullTank && (
-        <input type="number" step="0.1" placeholder="Ile litrów w zbiorniku po tankowaniu"
-          value={tankLevelAfter} onChange={e => setTankLevelAfter(e.target.value)} />
-      )}
-
       {fuelType === "lpg" && (
-        <input type="number" step="0.1" placeholder="Km przejechane na benzynie"
-          value={kmOnPetrol} onChange={e => setKmOnPetrol(e.target.value)} />
+        <div className="form-group">
+          <label>KM przejechane na benzynie</label>
+
+          <input
+            type="number"
+            value={kmOnPetrol}
+            onChange={(e) => setKmOnPetrol(e.target.value)}
+          />
+        </div>
       )}
 
-      <label className="fuel-form__checkbox-label">
-        <input type="checkbox" checked={missedPreviousRefuel} onChange={e => setMissedPreviousRefuel(e.target.checked)} />
-        Pominięto poprzednie tankowanie (nie licz spalania)
-      </label>
+      <div className="form-group">
+        <label>Notatka</label>
 
-      <button type="submit" className="fuel-form__submit">
-        {isEditing ? "Zapisz zmiany" : "Dodaj"}
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </div>
+
+      <button type="submit">
+        {initialEntry ? "Zapisz zmiany" : "Dodaj tankowanie"}
       </button>
     </form>
   )
