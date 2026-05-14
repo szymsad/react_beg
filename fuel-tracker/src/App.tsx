@@ -10,6 +10,7 @@ import FuelForm from "./components/FuelForm"
 import FuelList from "./components/FuelList"
 import FuelChart from "./components/FuelChart"
 import FuelStats from "./components/FuelStats"
+import CarForm from "./components/CarForm"
 
 const API_FUEL = "http://localhost:5103/api/entries"
 const API_CARS = "http://localhost:5103/api/cars"
@@ -52,6 +53,28 @@ function App() {
       const data = await response.json()
 
       setCars(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function handleAddCar(car: Car) {
+    try {
+      const response = await fetch(API_CARS, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(car),
+      })
+
+      if (!response.ok) {
+        throw new Error("Błąd dodawania auta")
+      }
+
+      const createdCar = await response.json()
+
+      setCars(prev => [...prev, createdCar])
     } catch (error) {
       console.error(error)
     }
@@ -145,6 +168,9 @@ async function handleEditEntry(updatedEntry: FuelEntry) {
             </option>
           ))}
         </select>
+        <div className="card">
+          <CarForm onAdd={handleAddCar} />
+        </div>
       </div>
 
       <div className="card">
