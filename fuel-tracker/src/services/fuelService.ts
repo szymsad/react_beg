@@ -1,19 +1,58 @@
+import type { Car } from "../types/Car"
 import type { FuelEntry } from "../types/FuelEntry"
-import { mockFuelData } from "../data/mockData"
 
-const STORAGE_KEY = "fuel_entries"
+const BASE = "http://localhost:5103/api"
 
-export async function getFuelEntries(): Promise<FuelEntry[]> {
-  const cached = localStorage.getItem(STORAGE_KEY)
-
-  if (cached) {
-    //return JSON.parse(cached)
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`HTTP ${res.status}: ${text}`)
   }
-
-  // później: replace with API call
-  return mockFuelData
+  return res.json()
 }
 
-export function saveFuelEntries(entries: FuelEntry[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
+// AUTA
+export const carApi = {
+  getAll: (): Promise<Car[]> =>
+    fetch(`${BASE}/cars`).then(handleResponse<Car[]>),
+
+  create: (car: Omit<Car, "id">): Promise<Car> =>
+    fetch(`${BASE}/cars`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(car),
+    }).then(handleResponse<Car>),
+
+  update: (id: number, car: Omit<Car, "id">): Promise<Car> =>
+    fetch(`${BASE}/cars/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(car),
+    }).then(handleResponse<Car>),
+
+  delete: (id: number): Promise<void> =>
+    fetch(`${BASE}/cars/${id}`, { method: "DELETE" }).then(() => {}),
+}
+
+// TANKOWANIA
+export const fuelApi = {
+  getByCarId: (carId: number): Promise<FuelEntry[]> =>
+    fetch(`${BASE}/entries?carId=${carId}`).then(handleResponse<FuelEntry[]>),
+
+  create: (entry: Omit<FuelEntry, "id">): Promise<FuelEntry> =>
+    fetch(`${BASE}/entries`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
+    }).then(handleResponse<FuelEntry>),
+
+  update: (id: number, entry: Omit<FuelEntry, "id">): Promise<FuelEntry> =>
+    fetch(`${BASE}/entries/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
+    }).then(handleResponse<FuelEntry>),
+
+  delete: (id: number): Promise<void> =>
+    fetch(`${BASE}/entries/${id}`, { method: "DELETE" }).then(() => {}),
 }
