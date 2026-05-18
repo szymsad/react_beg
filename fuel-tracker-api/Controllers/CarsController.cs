@@ -27,6 +27,9 @@ public class CarsController(AppDbContext db) : ControllerBase
         var car = new Car
         {
             Name = dto.Name,
+            Make = dto.Make,
+            Model = dto.Model,
+            Year = dto.Year,
             Plate = dto.Plate,
             TanksRaw = string.Join(",", dto.Tanks)
         };
@@ -41,6 +44,9 @@ public class CarsController(AppDbContext db) : ControllerBase
         var car = await db.Cars.FindAsync(id);
         if (car is null) return NotFound();
         car.Name = dto.Name;
+        car.Make = dto.Make;
+        car.Model = dto.Model;
+        car.Year = dto.Year;
         car.Plate = dto.Plate;
         car.TanksRaw = string.Join(",", dto.Tanks);
         await db.SaveChangesAsync();
@@ -58,7 +64,12 @@ public class CarsController(AppDbContext db) : ControllerBase
     }
 
     private static CarDto ToDto(Car c) => new(
-        c.Id, c.Name, c.Plate,
-        c.TanksRaw.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
-    );
+    c.Id,
+    c.Name,
+    c.Make,
+    c.Model,
+    c.Year,
+    c.Plate,
+    c.TanksRaw.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+);
 }
