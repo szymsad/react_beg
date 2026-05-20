@@ -10,8 +10,8 @@ function FuelStats({ entries }: Props) {
   const avgPetrol = calcAvgConsumption(entries, "petrol")
   const avgLpg = calcAvgConsumption(entries, "lpg")
   const avgDiesel = calcAvgConsumption(entries, "diesel")
-
-  const totalCost = entries.reduce((sum, e) => sum + e.totalCost, 0)
+  
+  //const totalCost = entries.reduce((sum, e) => sum + e.totalCost, 0)
   const lastEntry = entries[entries.length - 1]
 
   const consumptionData = calcConsumptionData(entries)

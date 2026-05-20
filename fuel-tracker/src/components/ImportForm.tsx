@@ -94,7 +94,11 @@ function ImportForm({ cars, onImport }: Props) {
     setLoading(true)
     setError(null)
     try {
-      await onImport(parsed, selectedCarId)
+      const entriesToImport = parsed.map(entry => ({
+        ...entry,
+        carId: selectedCarId,
+      }))
+      await onImport(entriesToImport, selectedCarId)
       setDone(true)
       setParsed(null)
       if (fileRef.current) fileRef.current.value = ""
