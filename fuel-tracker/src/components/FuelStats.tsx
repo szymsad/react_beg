@@ -19,11 +19,11 @@ function FuelStats({ entries }: Props) {
   const hasLpg = entries.some(e => e.fuelType === "lpg")
 
   const avgCostPerKm = consumptionData.length > 0
-    ? (consumptionData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionData.length).toFixed(4)
+    ? (consumptionData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionData.length).toFixed(3)
     : "0"
 
   const avgCostLpgPerKm = consumptionLpgData.length > 0
-    ? (consumptionLpgData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionLpgData.length).toFixed(4)
+    ? (consumptionLpgData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionLpgData.length).toFixed(3)
     : "0"
 
   return (
@@ -32,20 +32,30 @@ function FuelStats({ entries }: Props) {
       <div className="stats-grid">
         {avgPetrol > 0 && (
           <div className="stat-card">
-            <h3>Średnie spalanie ⛽</h3>
+            <h3>Średnie spalanie ⛽(benzyna)</h3>
             <p>{avgPetrol} L/100km</p>
           </div>
         )}
         {hasLpg && avgLpg > 0 && (
           <div className="stat-card">
-            <h3>Średnie spalanie 🟢</h3>
+            <h3>Średnie spalanie 🟢(LPG)</h3>
             <p>{avgLpg} L/100km</p>
           </div>
         )}
         {avgDiesel > 0 && (
           <div className="stat-card">
-            <h3>Średnie spalanie 🛢️</h3>
+            <h3>Średnie spalanie 🛢️(diesel)</h3>
             <p>{avgDiesel} L/100km</p>
+          </div>
+        )}
+        <div className="stat-card">
+          <h3>Średni koszt / km</h3>
+          <p>{avgCostPerKm} zł</p>
+        </div>
+        {hasLpg && (
+          <div className="stat-card">
+            <h3>Średni koszt LPG / km</h3>
+            <p>{avgCostLpgPerKm} zł</p>
           </div>
         )}
         <div className="stat-card">
@@ -60,16 +70,7 @@ function FuelStats({ entries }: Props) {
           <h3>Ostatnie tankowanie</h3>
           <p>{lastEntry ? `${lastEntry.totalCost.toFixed(2)} zł` : "—"}</p>
         </div>
-        <div className="stat-card">
-          <h3>Średni koszt / km</h3>
-          <p>{avgCostPerKm} zł</p>
-        </div>
-        {hasLpg && (
-          <div className="stat-card">
-            <h3>Średni koszt LPG / km</h3>
-            <p>{avgCostLpgPerKm} zł</p>
-          </div>
-        )}
+        
       </div>
     </div>
   )
