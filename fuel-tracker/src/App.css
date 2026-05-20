@@ -44,3 +44,10 @@
 .btn-add--import:hover {
   background: #0d6660;
 }
+.btn-add--cars {
+  background: #7c3aed;
+}
+
+.btn-add--cars:hover {
+  background: #6d28d9;
+}

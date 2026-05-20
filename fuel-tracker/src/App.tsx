@@ -13,6 +13,7 @@ import FuelStats from "./components/FuelStats"
 import CarForm from "./components/CarForm"
 import Modal from "./components/Modal"
 import ImportForm from "./components/ImportForm"
+import CarPanel from "./components/CarPanel"
 
 const API_FUEL = "http://localhost:5103/api/entries"
 const API_CARS = "http://localhost:5103/api/cars"
@@ -26,6 +27,7 @@ function App() {
   const [showFuelForm, setShowFuelForm] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FuelEntry | null>(null)
   const [showImport, setShowImport] = useState(false)
+  const [showCarPanel, setShowCarPanel] = useState(false)
 
   const { selectedCarId, setSelectedCarId } = useCar()
 
@@ -141,6 +143,33 @@ function App() {
     setShowImport(false)
   }
 
+  async function handleEditCar(car: Car) {
+    try {
+      const response = await fetch(`${API_CARS}/${car.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(car),
+      })
+      if (!response.ok) throw new Error()
+      const updated = await response.json()
+      setCars(prev => prev.map(c => c.id === updated.id ? updated : c))
+    } catch {
+      setError("Błąd podczas edycji auta.")
+    }
+  }
+
+  async function handleDeleteCar(id: number) {
+    try {
+      const response = await fetch(`${API_CARS}/${id}`, { method: "DELETE" })
+      if (!response.ok) throw new Error()
+      setCars(prev => prev.filter(c => c.id !== id))
+      if (selectedCarId === id) setSelectedCarId(null)
+      setEntries(prev => prev.filter(e => e.carId !== id))
+    } catch {
+      setError("Błąd podczas usuwania auta.")
+    }
+  }
+
 
   const filteredEntries = selectedCarId
     ? entries.filter(e => e.carId === selectedCarId)
@@ -178,28 +207,27 @@ function App() {
       ) : (
         <>
 
-          <button
-            className="btn-add btn-add--import"
-            onClick={() => setShowImport(prev => !prev)}
-          >
-            {showImport ? "✕ Anuluj import" : "📂 Importuj CSV"}
-          </button>
-
           {showImport && (
             <div className="card">
               <ImportForm cars={cars} onImport={handleImport} />
             </div>
           )}
           <button
-            className="btn-add"
-            onClick={() => setShowCarForm(prev => !prev)}
+            className="btn-add btn-add--cars"
+            onClick={() => setShowCarPanel(prev => !prev)}
           >
-            {showCarForm ? "✕ Anuluj dodawanie auta" : "+ Dodaj auto"}
+            {showCarPanel ? "✕ Zamknij zarządzanie autami" : "🚗 Zarządzaj autami"}
           </button>
 
-          {showCarForm && (
+          {showCarPanel && (
             <div className="card">
-              <CarForm onAdd={handleAddCar} />
+              <CarPanel
+                cars={cars}
+                onAddCar={handleAddCar}
+                onEditCar={handleEditCar}
+                onDeleteCar={handleDeleteCar}
+                onImport={handleImport}
+              />
             </div>
           )}
 
