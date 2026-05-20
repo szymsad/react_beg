@@ -36,3 +36,11 @@
 .btn-add:hover {
   background: #15803d;
 }
+
+.btn-add--import {
+  background: #0f766e;
+}
+
+.btn-add--import:hover {
+  background: #0d6660;
+}

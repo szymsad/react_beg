@@ -24,3 +24,24 @@
     color: #111827;
     margin: 0;
 }
+.current-mileage {
+    font-size: 15px;
+    color: #374151;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+
+.current-mileage strong {
+    color: #15803d;
+    font-size: 17px;
+}
+
+.stat-card__last {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}

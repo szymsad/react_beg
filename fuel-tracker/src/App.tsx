@@ -12,6 +12,7 @@ import FuelChart from "./components/FuelChart"
 import FuelStats from "./components/FuelStats"
 import CarForm from "./components/CarForm"
 import Modal from "./components/Modal"
+import ImportForm from "./components/ImportForm"
 
 const API_FUEL = "http://localhost:5103/api/entries"
 const API_CARS = "http://localhost:5103/api/cars"
@@ -24,6 +25,7 @@ function App() {
   const [showCarForm, setShowCarForm] = useState(false)
   const [showFuelForm, setShowFuelForm] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FuelEntry | null>(null)
+  const [showImport, setShowImport] = useState(false)
 
   const { selectedCarId, setSelectedCarId } = useCar()
 
@@ -122,6 +124,24 @@ function App() {
     }
   }
 
+  async function handleImport(
+    entries: Omit<FuelEntry, "id">[],
+    carId: number
+  ) {
+    for (const entry of entries) {
+      const response = await fetch(API_FUEL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...entry, carId }),
+      })
+      if (!response.ok) throw new Error("Błąd importu")
+    }
+    // Odśwież listę po imporcie
+    await fetchEntries()
+    setShowImport(false)
+  }
+
+
   const filteredEntries = selectedCarId
     ? entries.filter(e => e.carId === selectedCarId)
     : entries
@@ -157,6 +177,19 @@ function App() {
         <div className="app-loading">Ładowanie...</div>
       ) : (
         <>
+
+          <button
+            className="btn-add btn-add--import"
+            onClick={() => setShowImport(prev => !prev)}
+          >
+            {showImport ? "✕ Anuluj import" : "📂 Importuj CSV"}
+          </button>
+
+          {showImport && (
+            <div className="card">
+              <ImportForm cars={cars} onImport={handleImport} />
+            </div>
+          )}
           <button
             className="btn-add"
             onClick={() => setShowCarForm(prev => !prev)}
