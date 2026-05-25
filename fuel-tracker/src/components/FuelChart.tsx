@@ -131,23 +131,33 @@ function FuelChart({ entries }: Props) {
     setExporting(true)
 
     try {
-      // Tymczasowo ustaw białe tło i padding dla ładnego eksportu
       const el = chartRef.current
       const originalBg = el.style.background
       const originalPadding = el.style.padding
+      const originalWidth = el.style.width
+
       el.style.background = "#ffffff"
-      el.style.padding = "24px"
+      el.style.padding = "40px"
+      el.style.width = "1400px"   // ← szerszy kontener = większy wykres
+
+      // Poczekaj żeby Recharts przerysował się w nowym rozmiarze
+      await new Promise(r => setTimeout(r, 300))
 
       const canvas = await html2canvas(el, {
-        scale: 2,                    // 2x = ~Full HD dla typowej szerokości
+        scale: 1,
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
         imageTimeout: 0,
+        x: 0, y: 0,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
       })
 
       el.style.background = originalBg
       el.style.padding = originalPadding
+      el.style.width = originalWidth
 
       // Skaluj do dokładnie 1920x1080 jeśli trzeba
       const out = document.createElement("canvas")
