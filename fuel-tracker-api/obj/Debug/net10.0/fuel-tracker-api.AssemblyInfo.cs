@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("fuel-tracker-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+13d5824a179314aac8a2385ee421591a19ec5557")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4d22be36c51be4c7d3bbdb30e3eccaae0d8d0806")]
 [assembly: System.Reflection.AssemblyProductAttribute("fuel-tracker-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("fuel-tracker-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

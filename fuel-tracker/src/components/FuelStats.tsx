@@ -87,9 +87,9 @@ function FuelStats({ entries }: Props) {
           <div className="stat-card">
             <h3>Ostatnie ⛽ benzyna</h3>
             <p>{lastPetrol.totalCost.toFixed(2)} zł</p>
-            <span className="stat-card__last">{formatDate(lastPetrol.date)} · {lastPetrol.liters} L · {lastPetrol.pricePerLiter.toFixed(2)} zł/L</span>
+            <span className="stat-card__last">{formatDate(lastPetrol.date)} - <strong>{lastPetrol.liters} L - {lastPetrol.pricePerLiter.toFixed(2)} zł/L</strong></span>
             {lastPetrolConsumption !== null && (
-              <span className="stat-card__last">Spalanie: {lastPetrolConsumption} L/100km</span>
+              <span className="stat-card__last">Spalanie: <strong>{lastPetrolConsumption} L/100km</strong></span>
             )}
           </div>
         )}
@@ -97,9 +97,9 @@ function FuelStats({ entries }: Props) {
           <div className="stat-card">
             <h3>Ostatnie 🟢 LPG</h3>
             <p>{lastLpg.totalCost.toFixed(2)} zł</p>
-            <span className="stat-card__last">{formatDate(lastLpg.date)} · {lastLpg.liters} L · {lastLpg.pricePerLiter.toFixed(2)} zł/L</span>
+            <span className="stat-card__last">{formatDate(lastLpg.date)} - <strong>{lastLpg.liters} L - {lastLpg.pricePerLiter.toFixed(2)} zł/L</strong></span>
             {lastLpgConsumption !== null && (
-              <span className="stat-card__last">Spalanie: {lastLpgConsumption} L/100km</span>
+              <span className="stat-card__last">Spalanie: <strong>{lastLpgConsumption} L/100km</strong></span>
             )}
           </div>
         )}
@@ -107,9 +107,9 @@ function FuelStats({ entries }: Props) {
           <div className="stat-card">
             <h3>Ostatnie 🛢️ diesel</h3>
             <p>{lastDiesel.totalCost.toFixed(2)} zł</p>
-            <span className="stat-card__last">{formatDate(lastDiesel.date)} · {lastDiesel.liters} L · {lastDiesel.pricePerLiter.toFixed(2)} zł/L</span>
+            <span className="stat-card__last">{formatDate(lastDiesel.date)} - <strong>{lastDiesel.liters} L - {lastDiesel.pricePerLiter.toFixed(2)} zł/L</strong></span>
             {lastDieselConsumption !== null && (
-              <span className="stat-card__last">Spalanie: {lastDieselConsumption} L/100km</span>
+              <span className="stat-card__last">Spalanie: <strong>{lastDieselConsumption} L/100km</strong></span>
             )}
           </div>
         )}
