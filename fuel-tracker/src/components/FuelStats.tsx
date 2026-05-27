@@ -26,6 +26,10 @@ function FuelStats({ entries }: Props) {
   const lastLpgConsumption = consumptionLpgData.at(-1)?.lper100km ?? null
   const lastDieselConsumption = consumptionDieselData.at(-1)?.lper100km ?? null
 
+  const lastPetrol = [...entries].reverse().find(e => e.fuelType === "petrol")
+  const lastLpg    = [...entries].reverse().find(e => e.fuelType === "lpg")
+  const lastDiesel = [...entries].reverse().find(e => e.fuelType === "diesel")
+
   const avgCostPerKm = consumptionData.length > 0
     ? (consumptionData.reduce((sum, d) => sum + d.costPerKm, 0) / consumptionData.length).toFixed(3)
     : "0"
@@ -54,31 +58,22 @@ function FuelStats({ entries }: Props) {
           <div className="stat-card">
             <h3>Średnie spalanie ⛽ benzyna</h3>
             <p>{avgPetrol} L/100km</p>
-            {lastPetrolConsumption !== null && (
-              <span className="stat-card__last">Ostatnie: {lastPetrolConsumption} L/100km</span>
-            )}
           </div>
         )}
         {hasLpg && avgLpg > 0 && (
           <div className="stat-card">
             <h3>Średnie spalanie 🟢 LPG</h3>
             <p>{avgLpg} L/100km</p>
-            {lastLpgConsumption !== null && (
-              <span className="stat-card__last">Ostatnie: {lastLpgConsumption} L/100km</span>
-            )}
           </div>
         )}
         {hasDiesel && avgDiesel > 0 && (
           <div className="stat-card">
             <h3>Średnie spalanie 🛢️ diesel</h3>
             <p>{avgDiesel} L/100km</p>
-            {lastDieselConsumption !== null && (
-              <span className="stat-card__last">Ostatnie: {lastDieselConsumption} L/100km</span>
-            )}
           </div>
         )}
         <div className="stat-card">
-          <h3>Średni koszt / km</h3>
+          <h3>Średni koszt / km </h3>
           <p>{avgCostPerKm} zł</p>
         </div>
         {hasLpg && (
@@ -87,12 +82,39 @@ function FuelStats({ entries }: Props) {
             <p>{avgCostLpgPerKm} zł</p>
           </div>
         )}
-        <div className="stat-card">
-          <h3>Ostatnie tankowanie</h3>
-          <p>{lastEntry ? `${lastEntry.totalCost.toFixed(2)} zł` : "—"}</p>
-          <span className="stat-card__last">{lastEntry ? formatDate(lastEntry.date) : "—"}</span>
-        </div>
+
+        {lastPetrol && (
+          <div className="stat-card">
+            <h3>Ostatnie ⛽ benzyna</h3>
+            <p>{lastPetrol.totalCost.toFixed(2)} zł</p>
+            <span className="stat-card__last">{formatDate(lastPetrol.date)} · {lastPetrol.liters} L · {lastPetrol.pricePerLiter.toFixed(2)} zł/L</span>
+            {lastPetrolConsumption !== null && (
+              <span className="stat-card__last">Spalanie: {lastPetrolConsumption} L/100km</span>
+            )}
+          </div>
+        )}
+        {lastLpg && (
+          <div className="stat-card">
+            <h3>Ostatnie 🟢 LPG</h3>
+            <p>{lastLpg.totalCost.toFixed(2)} zł</p>
+            <span className="stat-card__last">{formatDate(lastLpg.date)} · {lastLpg.liters} L · {lastLpg.pricePerLiter.toFixed(2)} zł/L</span>
+            {lastLpgConsumption !== null && (
+              <span className="stat-card__last">Spalanie: {lastLpgConsumption} L/100km</span>
+            )}
+          </div>
+        )}
+        {lastDiesel && (
+          <div className="stat-card">
+            <h3>Ostatnie 🛢️ diesel</h3>
+            <p>{lastDiesel.totalCost.toFixed(2)} zł</p>
+            <span className="stat-card__last">{formatDate(lastDiesel.date)} · {lastDiesel.liters} L · {lastDiesel.pricePerLiter.toFixed(2)} zł/L</span>
+            {lastDieselConsumption !== null && (
+              <span className="stat-card__last">Spalanie: {lastDieselConsumption} L/100km</span>
+            )}
+          </div>
+        )}
       </div>
+
     </div>
   )
 }

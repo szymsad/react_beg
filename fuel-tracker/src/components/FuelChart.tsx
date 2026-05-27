@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import "./FuelChart.css"
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -6,7 +6,8 @@ import {
 } from "recharts"
 import type { FuelEntry, FuelType } from "../types/FuelEntry"
 import { calcConsumptionData, calcAvgConsumption } from "../utils/fuelCalculations"
-import html2canvas from "html2canvas"
+import { Chart, registerables, type ChartDataset } from "chart.js"
+Chart.register(...registerables)
 
 interface Props {
   entries: FuelEntry[]
@@ -110,7 +111,23 @@ function FuelChart({ entries }: Props) {
   const chartRef = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
 
+  const minDate = useMemo(() =>
+    entries.length > 0
+      ? entries.reduce((min, e) => e.date < min ? e.date : min, entries[0].date)
+      : ""
+  , [entries])
 
+  const maxDate = useMemo(() =>
+    entries.length > 0
+      ? entries.reduce((max, e) => e.date > max ? e.date : max, entries[0].date)
+      : ""
+  , [entries])
+
+  useEffect(() => {
+    setDateFrom(minDate)
+    setDateTo(maxDate)
+    setBrushRange(null)
+  }, [minDate, maxDate])
 
 
   function setPreset(days: number | null) {
@@ -127,75 +144,169 @@ function FuelChart({ entries }: Props) {
   }
 
   async function exportJpg() {
-    if (!chartRef.current) return
-    setExporting(true)
+  setExporting(true)
+  try {
+    // Canvas poza ekranem - nie dotyka DOM strony
+    const canvas = document.createElement("canvas")
+    canvas.width = 1920
+    canvas.height = 1080
+    canvas.style.cssText = "position:absolute;left:-9999px;top:-9999px"
+    document.body.appendChild(canvas)
 
-    try {
-      const el = chartRef.current
-      const originalBg = el.style.background
-      const originalPadding = el.style.padding
-      const originalWidth = el.style.width
+    // Dane
+    const labels = chartData.map(d => d.label)
+    const datasets: ChartDataset<"line">[] = []
 
-      el.style.background = "#ffffff"
-      el.style.padding = "40px"
-      el.style.width = "1400px"   // ← szerszy kontener = większy wykres
+    if (hasPetrol && visible.petrol) datasets.push({
+      label: "Benzyna",
+      data: chartData.map(d => d.petrol),
+      borderColor: "#2563eb",
+      backgroundColor: "rgba(37,99,235,0.08)",
+      borderWidth: 2.5,
+      pointRadius: 3,
+      tension: 0.1,
+      spanGaps: false,
+    })
+    if (hasLpg && visible.lpg) datasets.push({
+      label: "LPG",
+      data: chartData.map(d => d.lpg),
+      borderColor: "#16a34a",
+      backgroundColor: "rgba(22,163,74,0.08)",
+      borderWidth: 2.5,
+      pointRadius: 3,
+      tension: 0.1,
+      spanGaps: false,
+    })
+    if (hasDiesel && visible.diesel) datasets.push({
+      label: "Diesel",
+      data: chartData.map(d => d.diesel),
+      borderColor: "#b45309",
+      backgroundColor: "rgba(180,83,9,0.08)",
+      borderWidth: 2.5,
+      pointRadius: 3,
+      tension: 0.1,
+      spanGaps: false,
+    })
 
-      // Poczekaj żeby Recharts przerysował się w nowym rozmiarze
-      await new Promise(r => setTimeout(r, 300))
+    // Linie średnich (rysowane przez plugin po wyrenderowaniu wykresu)
+    const avgLines = mode === "consumption" ? [
+      { value: avgPetrol, color: "#2563eb", show: hasPetrol && visible.petrol && avgPetrol > 0 },
+      { value: avgLpg,    color: "#16a34a", show: hasLpg    && visible.lpg    && avgLpg    > 0 },
+      { value: avgDiesel, color: "#b45309", show: hasDiesel && visible.diesel && avgDiesel > 0 },
+    ].filter(a => a.show) : []
 
-      const canvas = await html2canvas(el, {
-        scale: 1,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        logging: false,
-        imageTimeout: 0,
-        x: 0, y: 0,
-        width: el.scrollWidth,
-        height: el.scrollHeight,
-        windowWidth: el.scrollWidth,
-      })
-
-      el.style.background = originalBg
-      el.style.padding = originalPadding
-      el.style.width = originalWidth
-
-      // Skaluj do dokładnie 1920x1080 jeśli trzeba
-      const out = document.createElement("canvas")
-      out.width = 1920
-      out.height = 1080
-      const ctx = out.getContext("2d")!
-      ctx.fillStyle = "#ffffff"
-      ctx.fillRect(0, 0, 1920, 1080)
-
-      // Wyśrodkuj i dopasuj proporcjonalnie
-      const ratio = Math.min(1920 / canvas.width, 1080 / canvas.height)
-      const w = Math.round(canvas.width * ratio)
-      const h = Math.round(canvas.height * ratio)
-      const x = Math.round((1920 - w) / 2)
-      const y = Math.round((1080 - h) / 2)
-      ctx.drawImage(canvas, x, y, w, h)
-
-      // Dodaj watermark z datą
-      ctx.fillStyle = "#9ca3af"
-      ctx.font = "24px Arial"
-      ctx.textAlign = "right"
-      ctx.fillText(
-        `Fuel Tracker · ${new Date().toLocaleDateString("pl-PL")}`,
-        1900, 1060
-      )
-
-      const link = document.createElement("a")
-      link.download = `wykres-${mode}-${new Date().toISOString().slice(0, 10)}.jpg`
-      link.href = out.toDataURL("image/jpeg", 0.95)
-      link.click()
-    } catch (e) {
-      console.error("Błąd eksportu:", e)
-    } finally {
-      setExporting(false)
+    const bgPlugin = {
+      id: "bg",
+      beforeDraw(chart: Chart) {
+        const ctx = chart.ctx
+        ctx.save()
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(0, 0, chart.width, chart.height)
+        ctx.restore()
+      }
     }
+
+    const avgPlugin = {
+      id: "avgLines",
+      afterDatasetsDraw(chart: Chart) {
+        const ctx = chart.ctx
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const yScale = (chart as any).scales.y
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const xScale = (chart as any).scales.x
+
+        avgLines.forEach(({ value, color }) => {
+          const yPos = yScale.getPixelForValue(value)
+          ctx.save()
+          ctx.setLineDash([14, 7])
+          ctx.strokeStyle = color
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(xScale.left, yPos)
+          ctx.lineTo(xScale.right, yPos)
+          ctx.stroke()
+
+          const label = `śr. ${value} L`
+          ctx.font = "bold 15px Arial"
+          const tw = ctx.measureText(label).width
+          ctx.setLineDash([])
+          ctx.fillStyle = "rgba(255,255,255,0.88)"
+          ctx.fillRect(xScale.left + 10, yPos + 5, tw + 10, 22)
+          ctx.fillStyle = color
+          ctx.fillText(label, xScale.left + 15, yPos + 21)
+          ctx.restore()
+        })
+      }
+    }
+
+    const chart = new Chart(canvas, {
+      type: "line",
+      plugins: [bgPlugin, avgPlugin],
+      data: { labels, datasets },
+      options: {
+        responsive: false,
+        animation: false,
+        layout: { padding: { top: 20, right: 60, bottom: 40, left: 20 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: { font: { size: 18 }, boxWidth: 24, padding: 20 },
+          },
+          title: {
+            display: true,
+            text: [
+              MODES.find(m => m.key === mode)?.label ?? mode,
+              `${fmt(stats?.dateStart ?? "")} - ${fmt(stats?.dateEnd ?? "")}  ·  ${stats?.count ?? 0} tankowań`,
+            ],
+            font: { size: 24 },
+            padding: { top: 20, bottom: 24 },
+            color: "#111827",
+          },
+        },
+        scales: {
+          x: {
+            ticks: { font: { size: 13 }, maxRotation: 45, color: "#6b7280" },
+            grid: { color: "rgba(0,0,0,0.07)" },
+          },
+          y: {
+            min: yMin,
+            max: yMax,
+            ticks: {
+              font: { size: 14 },
+              color: "#6b7280",
+              stepSize: 1,
+              callback: (v: unknown) => `${v}${currentUnit}`,
+            },
+            grid: { color: "rgba(0,0,0,0.07)" },
+          },
+        },
+      },
+    })
+
+    // Watermark
+    const ctx2d = canvas.getContext("2d")!
+    ctx2d.fillStyle = "#d1d5db"
+    ctx2d.font = "22px Arial"
+    ctx2d.textAlign = "right"
+    ctx2d.fillText(
+      `Fuel Tracker · ${new Date().toLocaleDateString("pl-PL")}`,
+      1895, 1065
+    )
+
+    const link = document.createElement("a")
+    link.download = `wykres-${mode}-${new Date().toISOString().slice(0, 10)}.jpg`
+    link.href = canvas.toDataURL("image/jpeg", 0.95)
+    link.click()
+
+    chart.destroy()
+    document.body.removeChild(canvas)
+  } catch (e) {
+    console.error("Błąd eksportu:", e)
+  } finally {
+    setExporting(false)
   }
-
-
+}
 
   const filteredEntries = useMemo(() =>
     entries.filter(e => {
@@ -337,7 +448,7 @@ function FuelChart({ entries }: Props) {
           <div className="fuel-chart__date-inputs">
             <input type="date" value={dateFrom}
               onChange={e => { setDateFrom(e.target.value); setBrushRange(null) }} />
-            <span className="fuel-chart__group-label">—</span>
+            <span className="fuel-chart__group-label">-</span>
             <input type="date" value={dateTo}
               onChange={e => { setDateTo(e.target.value); setBrushRange(null) }} />
           </div>
@@ -402,7 +513,7 @@ function FuelChart({ entries }: Props) {
             )}
             <Tooltip
               formatter={(value: unknown, name: unknown) => [
-                typeof value === "number" ? `${value}${currentUnit}` : "—",
+                typeof value === "number" ? `${value}${currentUnit}` : "-",
                 FUEL_LABELS[name as FuelType] ?? String(name),
               ]}
               labelFormatter={l => fmt(String(l))}
@@ -447,7 +558,7 @@ function FuelChart({ entries }: Props) {
                 {isZoomed ? "📊 Statystyki zaznaczonego okresu" : "📊 Statystyki okresu"}
               </span>
               <span className="fuel-chart__stats-range">
-                {fmt(stats.dateStart)} — {fmt(stats.dateEnd)}
+                {fmt(stats.dateStart)} - {fmt(stats.dateEnd)}
                 {" "}· {stats.count} tankowań
               </span>
             </div>
