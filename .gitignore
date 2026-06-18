@@ -42,3 +42,8 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sw?
+
+# private database
+*.db
+*.db-wal
+*.db-shm
