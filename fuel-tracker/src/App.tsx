@@ -14,8 +14,9 @@ import Modal from "./components/Modal"
 import ImportForm from "./components/ImportForm"
 import CarPanel from "./components/CarPanel"
 
-const API_FUEL = "http://localhost:5103/api/entries"
-const API_CARS = "http://localhost:5103/api/cars"
+const API_BASE = import.meta.env.VITE_API_URL
+const API_FUEL = `${import.meta.env.VITE_API_URL}/api/entries`
+const API_CARS = `${import.meta.env.VITE_API_URL}/api/cars`
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>([])

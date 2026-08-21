@@ -13,10 +13,12 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 builder.Services.AddCors(opt =>
     opt.AddPolicy("ReactApp", policy =>
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()));
-
+        policy.WithOrigins(
+            "http://localhost:5173",
+            "http://szymsadownia.ddns.net"  // ← produkcja
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
