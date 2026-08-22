@@ -9,10 +9,7 @@ type CarContextType = {
 const CarContext = createContext<CarContextType | null>(null)
 
 export function CarProvider({ children }: { children: ReactNode }) {
-  const [selectedCarId, setSelectedCarIdState] = useState<number | null>(() => {
-    const saved = localStorage.getItem("selectedCar")
-    return saved ? Number(saved) : 1
-  })
+  const [selectedCarId, setSelectedCarIdState] = useState<number | null>(null)
 
   function setSelectedCarId(id: number | null) {
     setSelectedCarIdState(id)

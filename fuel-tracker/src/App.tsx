@@ -15,8 +15,8 @@ import ImportForm from "./components/ImportForm"
 import CarPanel from "./components/CarPanel"
 
 const API_BASE = import.meta.env.VITE_API_URL
-const API_FUEL = `${import.meta.env.VITE_API_URL}/api/entries`
-const API_CARS = `${import.meta.env.VITE_API_URL}/api/cars`
+const API_FUEL = `${API_BASE}/entries`
+const API_CARS = `${API_BASE}/cars`
 
 function App() {
   const [entries, setEntries] = useState<FuelEntry[]>([])
@@ -32,14 +32,16 @@ function App() {
   const { selectedCarId, setSelectedCarId } = useCar()
 
   useEffect(() => {
-    Promise.all([fetchCars(), fetchEntries()])
-      .finally(() => setLoading(false))
-  }, [])
+  fetchCars().finally(() => setLoading(false))
+}, [])
 
-  useEffect(() => {
-    if (!selectedCarId) return
-    fetchEntries()
-  }, [selectedCarId])
+useEffect(() => {
+  if (!selectedCarId) {
+    setEntries([])
+    return
+  }
+  fetchEntries()
+}, [selectedCarId])
 
   async function fetchEntries() {
     try {
@@ -54,19 +56,27 @@ function App() {
     }
   }
 
-  async function fetchCars() {
-    try {
-      const response = await fetch(API_CARS)
-      if (!response.ok) throw new Error("Błąd pobierania aut")
-      const data: Car[] = await response.json()
-      setCars(data)
-      if (!selectedCarId && data.length > 0) {
-        setSelectedCarId(data[0].id)
-      }
-    } catch {
-      setError("Nie można załadować aut. Czy backend działa?")
-    }
+ async function fetchCars() {
+  try {
+    const response = await fetch(API_CARS)
+    if (!response.ok) throw new Error("Błąd pobierania aut")
+    const data: Car[] = await response.json()
+    setCars(data)
+
+    if (data.length === 0) return
+
+    const alreadyValid = data.some(c => c.id === selectedCarId)
+    if (alreadyValid) return
+
+    const saved = localStorage.getItem("selectedCar")
+    const savedId = saved ? Number(saved) : null
+    const savedIsValid = savedId !== null && data.some(c => c.id === savedId)
+
+    setSelectedCarId(savedIsValid ? savedId : data[0].id)
+  } catch {
+    setError("Nie można załadować aut. Czy backend działa?")
   }
+}
 
   async function handleAddCar(car: Car) {
     try {
@@ -159,16 +169,21 @@ function App() {
   }
 
   async function handleDeleteCar(id: number) {
-    try {
-      const response = await fetch(`${API_CARS}/${id}`, { method: "DELETE" })
-      if (!response.ok) throw new Error()
-      setCars(prev => prev.filter(c => c.id !== id))
-      if (selectedCarId === id) setSelectedCarId(null)
-      setEntries(prev => prev.filter(e => e.carId !== id))
-    } catch {
-      setError("Błąd podczas usuwania auta.")
-    }
+  try {
+    const response = await fetch(`${API_CARS}/${id}`, { method: "DELETE" })
+    if (!response.ok) throw new Error()
+    setCars(prev => {
+      const next = prev.filter(c => c.id !== id)
+      if (selectedCarId === id) {
+        setSelectedCarId(next[0]?.id ?? null)
+      }
+      return next
+    })
+    setEntries(prev => prev.filter(e => e.carId !== id))
+  } catch {
+    setError("Błąd podczas usuwania auta.")
   }
+}
 
 
   const filteredEntries = selectedCarId
