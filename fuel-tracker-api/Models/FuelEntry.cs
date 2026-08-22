@@ -7,6 +7,7 @@ public class FuelEntry
     public Car Car { get; set; } = null!;
 
     public string FuelType { get; set; } = "petrol";
+    public string? FuelVariant { get; set; }
     public string Date { get; set; } = string.Empty;
     public string Time { get; set; } = string.Empty;
     public double Liters { get; set; }

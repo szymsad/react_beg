@@ -1,4 +1,4 @@
-export type FuelType = 'petrol' | 'lpg' | 'diesel'
+export type FuelType = 'lpg' | 'petrol' | 'diesel'
 
 export type FuelEntry = {
   id: number

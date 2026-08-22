@@ -47,6 +47,7 @@ public class FuelEntriesController(AppDbContext db) : ControllerBase
         if (entry is null) return NotFound();
 
         entry.FuelType = dto.FuelType;
+        entry.FuelVariant = dto.FuelVariant;
         entry.Date = dto.Date;
         entry.Time = dto.Time;
         entry.Liters = dto.Liters;
@@ -77,6 +78,7 @@ public class FuelEntriesController(AppDbContext db) : ControllerBase
     {
         CarId = d.CarId,
         FuelType = d.FuelType,
+        FuelVariant = d.FuelVariant,
         Date = d.Date,
         Time = d.Time,
         Liters = d.Liters,
@@ -91,9 +93,9 @@ public class FuelEntriesController(AppDbContext db) : ControllerBase
     };
 
     private static FuelEntryDto ToDto(FuelEntry e) => new(
-        e.Id, e.CarId, e.FuelType, e.Date, e.Time,
-        e.Liters, e.PricePerLiter, e.TotalCost, e.Mileage,
-        e.IsFullTank, e.TankLevelAfter, e.MissedPreviousRefuel,
-        e.KmOnPetrol, e.Note
-    );
+     e.Id, e.CarId, e.FuelType, e.FuelVariant, e.Date, e.Time,
+     e.Liters, e.PricePerLiter, e.TotalCost, e.Mileage,
+     e.IsFullTank, e.TankLevelAfter, e.MissedPreviousRefuel,
+     e.KmOnPetrol, e.Note
+ );
 }

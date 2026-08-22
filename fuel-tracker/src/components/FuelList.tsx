@@ -20,6 +20,18 @@ const FUEL_LABEL: Record<string, string> = {
   diesel: "Diesel",
 }
 
+const FUEL_VARIANT_LABEL: Record<string, string> = {
+  pb95: "PB95",
+  pb98: "PB98",
+  diesel: "Diesel",
+  diesel_plus: "Diesel+",
+}
+
+function getFuelLabel(entry: FuelEntry): string {
+  if (entry.fuelVariant) return FUEL_VARIANT_LABEL[entry.fuelVariant] ?? FUEL_LABEL[entry.fuelType]
+  return FUEL_LABEL[entry.fuelType]
+}
+
 function getDistanceFromPrev(entries: FuelEntry[], index: number): number | null {
   const entry = entries[index]
   for (let i = index - 1; i >= 0; i--) {
@@ -72,7 +84,7 @@ function FuelList({  entries, onEdit, onDelete }: Props) {
             <div key={entry.id} className="fuel-entry">
               <div className="fuel-entry__header">
                 <span className="fuel-entry__fuel-type">
-                  {FUEL_ICON[entry.fuelType]} {FUEL_LABEL[entry.fuelType]}
+                  {FUEL_ICON[entry.fuelType]} {getFuelLabel(entry)}
                 </span>
                 <span className="fuel-entry__datetime">
                   {entry.date} {entry.time}
